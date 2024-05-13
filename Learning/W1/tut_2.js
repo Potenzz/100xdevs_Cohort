@@ -43,7 +43,7 @@ const value = giveSum(2,3);
 console.log(value);
 
 
-// Givning function to a function as a argument, 
+// Givning function to a function as a argument,  known as CallBack
 
 function giveSum2(a,b, fnToCall){
     const value = a+b;

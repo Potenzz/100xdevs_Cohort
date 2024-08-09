@@ -2,7 +2,7 @@ const express = require("express");
 const port = 3000; 
 const app = express();  
 
-// Check "localhost:3000 on your browser to observe this."
+// Check "localhost:3000" on your browser to observe this."
 
 app.get('/who-are-you', function(req, res) {
     //req takes headers, body, parametere, and res sends it.
@@ -17,4 +17,4 @@ app.get('/', function(req, res) {
 app.listen(port, function() {
     console.log(`Example app is listing on port ${port}`)
 }) 
-
+z

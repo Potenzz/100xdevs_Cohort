@@ -1,0 +1,29 @@
+Basic Bash Commands : 
+
+pwd - print working directory
+cd - change directory
+ls - list items
+mkdir - make directory
+touch - create files
+cat - prints content of files
+vi - lets edit the files
+mv - lets move the file/folder - mv the_path_to_be_moved the_path_where_it_will_move
+cp - copy file/folder - "cp file the_path_where_it_will_copied" and cp -r folder_path folder_path_where_it_will_be_copied"
+
+
+Advance Bash Commands :
+
+Commands to view files.
+
+ls -l : shows detail about items
+ls -l item_directory : shows details about sub directory (replace item_directory with actual directory)
+ls -t : shows when items was last modified.
+
+(we can combine the Commands as well like "ls -lt" )
+
+ls -a : shows hidden files
+ls -R : shows recursively each subfile till the end.
+ls -r : shows files in reverse order of modified
+ls -s : acc to size 
+ls *.json : spefic type of files (here .json can be replaced with any other type as well)
+ls name* : it shows the files which matches this names.

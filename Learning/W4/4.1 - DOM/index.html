@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .container {
+        background-color: rgb(167, 201, 74);
+        font-size: 35px;
+        padding: 20;
+        margin: 100;
+        color: black;
+    }
+</style>
+
+<script>
+
+    // Debounced Function : it gets called when user types, and wait for few miliSeconds to call the main function. If the user types again then it again wait for the same seconds until user stops,
+    // Its main purpose is, that program won't send requests at each step.
+    
+    let timeout;
+    function debounced_func(){
+        clearTimeout(timeout);
+
+        timeout = setTimeout(function(){
+            populateDiv()}, 100   
+        );
+    }
+
+
+    async function populateDiv(){
+        const a = document.getElementById("firstNum").value;
+        const b = document.getElementById("secondNum").value; 
+
+        const res = await fetch(`http://localhost:3000/sum?a=${a}&b=${b}`)
+        const ans = await res.text()
+        // DOM
+        document.getElementById("finalSum").innerHTML = ans;
+
+
+    }
+</script>
+
+<body>
+    <div class="container"> Welcome here </div>
+    <div class="container"> This is a calcutator</div><br></br>
+
+    <input oninput="debounced_func()" id="firstNum" type="text" placeholder="First Number"></input><br></br>
+    <input oninput="debounced_func()" id="secondNum" type="text" placeholder="Second Number"></input><br></br>
+    <!-- <button onclick="populateDiv()">Calculate Sum</button><br></br> -->
+    <div id="finalSum"></div>
+    
+</body>
+
+</html>

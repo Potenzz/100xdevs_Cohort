@@ -1,0 +1,71 @@
+<!-- Without React: This is how data is rendered dynamically -->
+ <!-- Another methods which renders data according to given state of data. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+  <input type="text" id="title" placeholder="Todo title"></input> <br /><br />
+  <input type="text" id="description" placeholder="Todo description"></input> <br /><br />
+  <button onclick="addTodo()">Add todo</button>
+
+  <div id="container">
+
+  </div>
+</body>
+
+<script>
+    let globalId = 1;
+
+    function markAsDone(todoId) {
+      const parent = document.getElementById(todoId);
+      parent.children[2].innerHTML = "Done!"
+    }
+
+    function createChild(title, description, id) {
+      const child = document.createElement("div");
+      const firstGrandChild = document.createElement("div");
+      firstGrandChild.innerHTML = title;
+      const secondGrandChild = document.createElement("div");
+      secondGrandChild.innerHTML = description;
+      const thirdGrandChild = document.createElement("button");
+      thirdGrandChild.innerHTML = "Mark as done";
+      thirdGrandChild.setAttribute("onclick", `markAsDone(${id})`);
+      child.appendChild(firstGrandChild);
+      child.appendChild(secondGrandChild);
+      child.appendChild(thirdGrandChild)
+      child.setAttribute("id", id);
+      return child;
+    
+    }
+
+    function updateDomAccToState(state){
+        const parent = document.getElementById("container");
+        parent.innerHTML = "";
+
+        for(let i=0; i<state.length; i++){
+            const child = createChild(state[i].title, state[i].description, state[i].id);
+            parent.appendChild( child);
+        }
+    }
+
+    // This state is usually, comes with backend, and does not presents here.s
+    state = [{
+        "title":"work",
+        "description":"coding",
+        "id":1
+    },{
+        "title":"work2",
+        "description":"coding2",
+        "id":2
+    }
+];
+    
+    updateDomAccToState(state);
+</script>
+
+</html>

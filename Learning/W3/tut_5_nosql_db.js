@@ -7,7 +7,7 @@ app.use(express.json());
 
 //Typical mongodb link : mongodb+srv://<username>:<password>@<cluster-url>/<database>?<options>
 
-mongoose.connect("mongodb+srv://admin:dbVishnu@mybasiccluster.vhvsa.mongodb.net/users_app")
+mongoose.connect("url")
 .then(() => console.log("Connected to MongoDB"))
 .catch(err => console.error("MongoDB connection error:", err));
 

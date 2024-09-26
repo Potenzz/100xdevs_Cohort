@@ -2,6 +2,8 @@ const express = require('express');
 const { createTodo, updateTodo } = require('./types');
 const { todo } = require('./db');
 const cors = require('cors');
+const mongoose = require('mongoose');
+
 
 const app = express();
 app.use(express.json());
@@ -39,12 +41,24 @@ app.post('/todos', async function(req, res){
 
 
 app.get('/todo', async function(req, res){
+    // const id  = req.query.id;    
+    const {id}  = req.query;    
+
+    if (id) {
+         // Check if the provided ID is a valid ObjectId
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ message: 'Invalid ID format' });
+        }
+
+        const todobyid = await todo.findById(id);
+        if (!todobyid) {
+            return res.status(404).json({ message: 'Todo not found' });
+        }
+        return res.json({ todobyid });
+    }
+
     const todos = await todo.find();
-    res.json({
-        todos
-    })
-
-
+    res.json({ todos });
 });
 
 

@@ -1,0 +1,270 @@
+6.1 part 2 is about - 
+
+useState,
+useEffect, 
+useCallback,
+useMemo,
+
+useRefs,
+useContext,
+useReducer,
+useLayoutEffect
+
+
+
+In React, hooks are special functions that allow you to use React features such as state and lifecycle methods
+inside functional components
+
+Lifecycle methods refer to special functions in class components that are automatically called at
+specific points during the lifecycle of a component
+
+All the above mentioned terms are hooks.
+
+
+
+
+-------------- UseEffect --
+
+
+useEffect is a hook that allows functional components to handle side effects. Side effects can include tasks
+such as fetching data, updating the DOM, setting up subscriptions, or working with external APIs, which need
+to occur outside the normal render flow.
+
+
+#basic code 
+useEffect(() => {
+  // Side effect logic (e.g., data fetching, event listeners)
+  
+  return () => {
+    // Cleanup logic (optional, for unmounting or resetting)
+  };
+}, [dependencies]);
+
+
+the dependencies which are mentioned here, Basically if the dependencies is empty or 1, then useEffect will
+run once only, and if any dependencies is changed then useEffect will run again, 
+In real life, if any button is called then it will fetch the data again, see it like this.
+
+Also,
+useEffect serves a similar purpose to lifecycle methods like componentDidMount, componentDidUpdate, and 
+componentWillUnmount in class components.
+
+
+Code :
+
+#1
+
+function App() {
+  const [todos, setTodos] = useState([]);
+
+  useEffect(()=> {
+    setInterval(()=> {
+      fetch("anybackendurl")
+      .then(async function (res) {
+        const json = await res.json();
+        setTodos(json.todos);
+      })
+
+    }, 5000)
+  }, []);
+  
+  return <div>
+    {todos.map((todo)=><Todo title={todo.title} description={todo.description}></Todo>)}
+  </div>
+}
+
+function Todo({title, description}){
+  return <div>
+    <h1>{title}</h1>
+    <h4>{description}</h4>
+  </div>
+}
+
+
+
+
+
+#2 - dependencies usage in useEffect.
+
+
+function App() {
+  const [clicker, setClicker] = useState("66edb16a9c8119e62fc10e58");
+
+  // as in mongoose backend, the todos have these values as id, so .
+  return <div>
+        <button onClick={function(){setClicker("66edb02a9c8119e62fc10e4d")}}>1</button>
+        <button onClick={function(){setClicker("66edb03b9c8119e62fc10e51")}}>2</button>
+        <button onClick={function(){setClicker("66edb0a69c8119e62fc10e54")}}>3</button>
+        <button onClick={function(){setClicker("66edb16a9c8119e62fc10e58")}}>4</button>
+  <Todo id={clicker}></Todo>
+  </div>
+};
+
+function Todo({id}){
+  const [todo, setTodo] = useState([]);
+
+  useEffect(()=>{
+    axios.get(`http://localhost:3000/todo?id=${id}`)
+  .then(function(response){
+    const newtodo = response.data.todobyid;
+    setTodo(newtodo);
+  })
+  }, [id])
+  // the backend will be called when the id changes.
+
+  return <div>
+    {id}
+    <h1>{todo.title}</h1>
+    <h3>{todo.description}</h3>
+  </div>
+}
+
+export default App
+
+
+
+
+
+---------------------  useMemo --
+
+Memoization - It is a technique where the result of a function call is cached so that it doesn’t need
+to be recomputed every time the function is called with the same inputs. 
+
+
+useMemo is a React Hook that allows you to optimize performance by memoizing the result of a computation. 
+and only recomputes it when one of its dependencies changes.
+
+Code :
+
+
+function App() {
+  const [counter, setCounter] = useState(0);
+  const [inputValue, setInputValue] = useState(0);
+
+  let count = useMemo(()=>{
+    let sum = 0
+    for(let i=0; i<=inputValue; i++){
+      sum += i;
+    }
+    return sum
+  },[inputValue])
+
+  return <div>
+    <input onChange={function(e){
+    setInputValue(Number(e.target.value))}} type="number" placeholder='Enter the number'/>
+    <div>Sum is {count}</div>
+    <br />
+    <button onClick={function(){
+      setCounter(counter+1);
+    }}> Counter {counter}</button>
+  </div>
+};
+
+
+This code will only calculate the sum, when input changes.
+It is similare to useEffect, but this is preferred where calcuation is required to do, not lifecycle methods.
+
+
+
+
+
+
+-------------------------------- useCallback --
+
+useCallback is a React hook that returns a memoized version of a callback function. This means it will only 
+recreate the function if one of its dependencies changes. It is particularly useful for optimizing performance in 
+components that rely on callback functions, especially when passing them as props to child components.
+
+
+When you pass a function as a prop to a child component, React creates a new function reference every time the 
+parent re-renders. If the child component uses React.memo for optimization, it will still re-render unnecessarily 
+because the prop (the callback function) has a different reference on each render. useCallback helps prevent this
+by returning the same function reference as long as the dependencies don’t change.
+
+Code : 
+
+
+# the issue, 
+
+
+function App() {
+  const [counter, setCounter] = useState(0);
+
+  function printfunc(){
+    console.log("printed things.")
+  };
+
+  return <div>
+    <ButtonComp anyfunc={printfunc}></ButtonComp>
+    <button onClick={function(){
+      setCounter(counter+1);
+    }}> Counter {counter}</button>
+  </div>
+};
+
+const ButtonComp = memo(({anyfunc})=>{
+  anyfunc();
+  return <div>Button Clicked.</div>
+});
+
+
+#here, as you can see the ButtonComp func is a memo func, it should ideally be re-rendered when its prop is
+changed but it is a simple func, still it is re-renders, 
+
+It is because, everytime react re-renders it finds the same func referential address diffrent, and memo thinks that
+props are changed. and renders it, 
+
+So, to avoid this, we use useCallback to define such functions, which will be considerd as changed when its 
+dependencies are changed.
+
+
+Its Code:
+
+  function printfunc(){
+    console.log("printed things.")
+  };
+
+
+  Above should be written like below one.
+
+
+  const printfunc = useCallback(()=>{
+    console.log("Printed Things.")
+  },[]);
+
+
+
+
+------------------------------------- Custom Hooks ---
+
+//Cusome hooks - Should start with use. 
+You can see, in the main App func, we have very little code, all is done be my custom hook.
+That why it is needed.
+
+Code:
+
+
+function useTodos(){
+  const [todos, setTodos] = useState([]);
+
+  useEffect(()=> {
+    setInterval(()=> {
+      fetch("anybackendurl")
+      .then(async function (res) {
+        const json = await res.json();
+        setTodos(json.todos);
+      })
+
+    }, 5000)
+  }, []);
+
+  return todos;
+}
+
+function App() {
+  const todos = useTodos();
+  return <div>
+    {todos}
+  </div>
+}
+

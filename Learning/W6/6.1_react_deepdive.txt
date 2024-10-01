@@ -1,7 +1,8 @@
 6.1 is about - 
 
 React Returns,
-Re-Rendering, 
+Re-Rendering,
+React Memo 
 key,
 Wrapper Components,
 

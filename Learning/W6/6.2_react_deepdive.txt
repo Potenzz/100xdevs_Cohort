@@ -270,3 +270,42 @@ function App() {
 
 
 
+------------------------------------- useRef -- 
+
+Code :
+
+// This code, after five second changes what react has displayed to dom, not a good practice as react still thinks, 
+// that the same old value is there... so use useRef f
+function App() {
+
+  const [incomeTax, setIncomeTax] = useState(20000)
+  useEffect(()=>{
+    setTimeout(()=>{
+      document.getElementById("incometaxcontainer").innerHTML = "10"
+    },5000);
+  },[])
+ 
+  return <div>
+    hi there, your income tax return are <div id="incometaxcontainer">{incomeTax}</div>
+  </div>
+}
+
+
+
+useRef code : 
+
+
+function App() {
+  const [incomeTax, setIncomeTax] = useState(20000)
+  const divRef = useRef();
+
+  useEffect(()=>{
+    setTimeout(()=>{
+      divRef.current.innerHTML = "10"
+    },5000);
+  },[])
+ 
+  return <div>
+    hi there, your income tax return are <div ref={divRef}>{incomeTax}</div>
+  </div>
+}

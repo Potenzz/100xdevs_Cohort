@@ -10,3 +10,6 @@ node_modules/
 #Ignore package files
 /package.json
 /package-lock.json
+
+
+App-1/

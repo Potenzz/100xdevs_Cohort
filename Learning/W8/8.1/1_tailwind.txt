@@ -1,0 +1,99 @@
+To Make any frontend, to work with any framework, below things need to keep in mind. 
+
+1. Flex
+2. Grids
+3. Responsiveness
+4. Background Color, Text Color, Hover.
+
+
+
+
+-------------------- Tailwind -----------------------
+
+Installation guide in on official docs. 
+
+
+--------------------- Flex -----------
+Flex : It can allign two divs each after another too. flex-start is the default value, in justify-content.
+
+
+Way of wrinting:
+
+without Tailwind:
+<div style={{display:"flex", justifyContent:"space-between"}}>
+        <div style={{backgroundColor:"red"}}>Hello </div>
+        <div style={{backgroundColor:"red"}}>Hello </div>
+        <div style={{backgroundColor:"red"}}>Hello </div>
+</div>
+
+
+with Tailwind:
+<div className="flex justify-between">
+    <div className="bg-red-500">Hello </div>
+    <div className="bg-black">Hello </div>
+    <div className="bg-yellow-500">Hello </div>
+</div>
+
+
+
+
+
+#---------------------------------- Grid ------------------------
+
+Basic: grid-cols-n , n will divide the cols in n parts, 
+<div className="grid grid-cols-3">
+        <div className="bg-red-500">Hello </div>
+        <div className="bg-yellow-500">Hello </div>
+        <div className="bg-green-500">Hello </div>
+</div>
+
+
+Changing the size of childern:
+<div className="grid grid-cols-10">
+        <div className="bg-red-500 col-span-4">Hello </div>
+        <div className="bg-yellow-500 col-span-4">Hello </div>
+        <div className="bg-green-500 col-span-2">Hello </div>
+</div>
+
+
+
+--------------------- Mobile First Approach ---------------------
+
+The mobile-first approach in Tailwind CSS (and CSS in general) means that you design your layouts primarily for smaller
+screens (like phones) and progressively enhance them for larger screens (like tablets, laptops, and desktops).
+
+In Tailwind, this approach is built-in by default—you apply styles for small screens directly, and only modify them for 
+larger screens using breakpoints.
+
+
+Usage notes;
+
+Base Styles Without Breakpoints:
+Styles you define without any screen-specific prefix apply to all screen sizes by default (starting with the smallest screen size).
+
+Using Breakpoints to Enhance for Larger Screens:
+Tailwind provides responsive breakpoints (like sm, md, lg, etc.) to apply styles at specific screen sizes.
+These breakpoints override the default styles for larger screens.
+
+sm   → 640px  
+md   → 768px  
+lg   → 1024px  
+xl   → 1280px  
+2xl  → 1536px
+
+
+
+Code:
+1:
+<div className="bg-red-500 md:bg-blue-500 lg:bg-green-500">
+        Helloooo
+</div>
+
+//It will by default show red(on mobile), but since it gets to know the pc size, it override acc to breakpoint sizes, 
+like:
+If it falls in the range 768px ≤ width < 1024px → Blue (md:bg-blue-500).
+If it's ≥1024px → Green (lg:bg-green-500).
+
+
+
+

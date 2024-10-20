@@ -1,17 +1,17 @@
 const express = require("express");
-const { userSignUpSchema } = require("../zod_types");
+const { userSignUpSchema } = require(".zod_types");
 const { User } = require("../db");
 const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("../config")
 const bcrypt = require('bcrypt');
+const { authMiddleware } = require("../middleware");
 
 
 const router = express.Router();
 
 
-
 router.post("/signup", async (req, res) => {
-    payload = req.body();
+    payload = req.body;
     parsedPayload = userSignUpSchema.safeParse(payload);
 
     // reject, if input not corrected as per zod.
@@ -20,7 +20,6 @@ router.post("/signup", async (req, res) => {
             msg:"You sent Wrong Inputs.",
             errors: parsedPayload.error.errors
         });
-        return;
     }
 
     // check if user exists or not
@@ -31,11 +30,10 @@ router.post("/signup", async (req, res) => {
             res.status(409).json({
                 msg:"Username already taken!"
             })
-            return;
         }else{
             // if not exists, then create one.
             try{
-                const hashedPassword = await bcrypt.hash(parsedPayload.password, 10);
+                const hashedPassword = await bcrypt.hash(parsedPayload.password, 12);
 
                 new_user = await User.create({
                     username : parsedPayload.username,
@@ -44,9 +42,9 @@ router.post("/signup", async (req, res) => {
                     last_name : parsedPayload.last_name,
                 })
 
-                const token = jwt.sign({
-                    userId : new_user._id
-                }, JWT_SECRET)
+
+                const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { algorithm: "HS256"});
+
 
                 res.status(201).json({
                     msg : "User Created Successfully",
@@ -54,9 +52,10 @@ router.post("/signup", async (req, res) => {
                 })
 
             }catch(err){
+                console.log(err)
                 res.status(500).json({
                     msg:"Server Error! Couldn't Signup"
-                })
+                });
             }
         }
 
@@ -64,9 +63,72 @@ router.post("/signup", async (req, res) => {
         console.error("Error checking user existence", err);
         res.status(500).json({
             msg:"Couldn't check if user exists or not, Try again!"
-        })
+        });
+    }
+
+
+})
+
+
+router.put("/", authMiddleware, async(req, res) => {
+    payload = req.body;
+    parsedPayload = userSignUpSchema.safeParse(payload);
+
+    // reject, if input not corrected as per zod.
+    if(!parsedPayload.success){
+        console.log(err)
+        res.status(411).json({
+            msg:"You sent Wrong Inputs.",
+            errors: parsedPayload.error.errors
+        });
+    }
+
+    try{
+        await User.updateOne(parsedPayload, {id:req.userId});
         return;
     }
+    catch(err){
+        console.log(err)
+        res.status(500).json({
+            msg:"Internal Server Error, Try again later!"
+        })
+    }
+})
+
+
+router.get("/bulk", async(req, res)=>{
+    const filter = req.query.filter || "";
+    
+    try{
+    const users  = await User.find({
+        $or : [
+            {
+                first_name:{"$regex":filter}
+            },
+            {
+                last_name:{"$regex":filter}
+            }
+        ]
+    });
+
+    res.json({
+        user : users.map(user=>({
+            username:user.username,
+            first_name:user.first_name,
+            last_name:user.last_name,
+            _id:user._id
+        }))
+    })
+    }
+    catch(err){
+        console.log(err)
+        res.status(500).json({
+            msg:"Internal Server Error, Try again later!"
+        })
+    }
+
+    
+
 
 
 })

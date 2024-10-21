@@ -1,22 +1,23 @@
 const express = require("express");
-const { userSignUpSchema, userSigninSchema, userUpdateSchema} = require(".zod_types");
+const { userSignUpSchema, userSigninSchema, userUpdateSchema} = require("./zod_types");
 const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("../config")
 const bcrypt = require('bcrypt');
 const { authMiddleware } = require("../middleware");
+const mongoose = require('mongoose'); // Import mongoose
 
 
 const router = express.Router();
 
 
 router.post("/signup", async (req, res) => {
-    payload = req.body;
-    parsedPayload = userSignUpSchema.safeParse(payload);
+    const payload = req.body;
+    const parsedPayload = userSignUpSchema.safeParse(payload);
 
     // reject, if input not corrected as per zod.
     if(!parsedPayload.success){
-        res.status(411).json({
+        return res.status(411).json({
             msg:"You sent Wrong Inputs.",
             errors: parsedPayload.error.errors
         });
@@ -24,22 +25,22 @@ router.post("/signup", async (req, res) => {
 
     // check if user exists or not
     try{
-        const user = await User.findOne({username: parsedPayload.username});
+        const user = await User.findOne({username: parsedPayload.data.username});
 
         if(user){
-            res.status(409).json({
+            return res.status(409).json({
                 msg:"Username already taken!"
             })
         }else{
             // if not exists, then create one.
             try{
-                const hashedPassword = await bcrypt.hash(parsedPayload.password, 12);
+                const hashedPassword = await bcrypt.hash(parsedPayload.data.password, 12);
 
-                new_user = await User.create({
-                    username : parsedPayload.username,
+                const newUser = await User.create({
+                    username : parsedPayload.data.username,
                     password : hashedPassword,
-                    first_name : parsedPayload.first_name,
-                    last_name : parsedPayload.last_name,
+                    first_name : parsedPayload.data.first_name,
+                    last_name : parsedPayload.data.last_name,
                 })
 
                 const userId = newUser._id;
@@ -52,14 +53,14 @@ router.post("/signup", async (req, res) => {
                 const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { algorithm: "HS256"});
 
 
-                res.status(201).json({
+                return res.status(201).json({
                     msg : "User Created Successfully",
                     token : token 
                 })
 
             }catch(err){
                 console.log(err)
-                res.status(500).json({
+                return res.status(500).json({
                     msg:"Server Error! Couldn't Signup"
                 });
             }
@@ -76,27 +77,26 @@ router.post("/signup", async (req, res) => {
 })
 
 
-
 router.post("/signin", async (req, res) => {
-    payload = req.body;
-    parsedPayload = userSigninSchema.safeParse(payload);
+    const payload = req.body;
+    const parsedPayload = userSigninSchema.safeParse(payload);
 
     // reject, if input not corrected as per zod.
     if(!parsedPayload.success){
-        res.status(411).json({
+        return res.status(411).json({
             msg:"You sent Wrong Inputs. Make sure the format is correct.",
             errors: parsedPayload.error.errors
         });
     }
 
     try {
-        const user = await User.findOne({ username: parsedPayload.username });
+        const user = await User.findOne({ username: parsedPayload.data.username });
         if (!user) {
             return res.status(404).json({ msg: "User not found." });
         }
 
         // Compare the provided password with the hashed password
-        const isPasswordValid = await bcrypt.compare(parsedPayload.password, user.password);
+        const isPasswordValid = await bcrypt.compare(parsedPayload.data.password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({ msg: "Invalid Password." });
         }
@@ -104,37 +104,45 @@ router.post("/signin", async (req, res) => {
         // Generate JWT token on successful login
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { algorithm: "HS256" });
 
-        res.status(200).json({
+        return res.status(200).json({
             msg: "Login successful.",
             token: token
         });
     } catch (err) {
         console.error("Error during sign-in:", err);
-        res.status(500).json({ msg: "Server error. Please try again." });
+        return res.status(500).json({ msg: "Server error. Please try again." });
     }
 })
 
 
 router.put("/", authMiddleware, async(req, res) => {
-    payload = req.body;
-    parsedPayload = userUpdateSchema.safeParse(payload);
+    const payload = req.body;
+    const parsedPayload = userUpdateSchema.safeParse(payload);
 
     // reject, if input not corrected as per zod.
     if(!parsedPayload.success){
         console.log(err)
-        res.status(411).json({
+        return res.status(411).json({
             msg:"You sent Wrong Inputs.",
             errors: parsedPayload.error.errors
         });
     }
 
     try{
-        await User.updateOne(parsedPayload, {id:req.userId});
-        return;
+        const userId = req.user.userId; 
+        const result = await User.updateOne(
+            { _id: new mongoose.Types.ObjectId(userId) },
+            { $set: parsedPayload.data }
+        );
+
+        if (result.nModified === 0) {
+            return res.status(404).json({ msg: "User not found or no changes made." });
+        }
+        return res.status(200).json({ msg: "User updated successfully." });
     }
     catch(err){
         console.log(err)
-        res.status(500).json({
+        return res.status(500).json({
             msg:"Internal Server Error, Try again later!"
         })
     }
@@ -143,20 +151,23 @@ router.put("/", authMiddleware, async(req, res) => {
 
 router.get("/bulk", async(req, res)=>{
     const filter = req.query.filter || "";
-    
+    console.log(`Searching for: ${filter}`);
+
     try{
     const users  = await User.find({
         $or : [
             {
-                first_name:{"$regex":filter}
+                first_name:{"$regex":filter, "$options": "i"}
             },
             {
-                last_name:{"$regex":filter}
+                last_name:{"$regex":filter, "$options": "i"}
             }
         ]
     });
 
-    res.json({
+    console.log(users)
+
+    return res.json({
         user : users.map(user=>({
             username:user.username,
             first_name:user.first_name,
@@ -167,15 +178,10 @@ router.get("/bulk", async(req, res)=>{
     }
     catch(err){
         console.log(err)
-        res.status(500).json({
+        return res.status(500).json({
             msg:"Internal Server Error, Try again later!"
         })
     }
-
-    
-
-
-
 })
 
 module.exports = router;

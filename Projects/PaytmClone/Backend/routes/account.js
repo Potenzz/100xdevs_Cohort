@@ -9,7 +9,7 @@ const router = express.Router();
 router.get("/balance", authMiddleware, async (req, res) => {
     try{
     const account = await Account.findOne({
-        userId: req.userId
+        userId: req.user.userId
     });
 
     res.json({
@@ -17,7 +17,7 @@ router.get("/balance", authMiddleware, async (req, res) => {
     })
     }catch(err){
         console.log(err);
-        return res.statusCode(500).json({
+        return res.status(500).json({
             msg:"Server error. Couldn't get the balance, please try again."
         })
     }
@@ -40,7 +40,7 @@ router.post("/transfer", authMiddleware, async (req, res) => {
         }
 
         // Fetch the sender's account
-        const senderAccount = await Account.findOne({ userId: req.userId }).session(session);
+        const senderAccount = await Account.findOne({ userId: req.user.userId }).session(session);
         if (!senderAccount) {
             await session.abortTransaction();
             return res.status(404).json({ msg: "Sender account not found." });

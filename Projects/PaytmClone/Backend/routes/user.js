@@ -1,6 +1,6 @@
 const express = require("express");
-const { userSignUpSchema } = require(".zod_types");
-const { User } = require("../db");
+const { userSignUpSchema, userSigninSchema, userUpdateSchema} = require(".zod_types");
+const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const {JWT_SECRET} = require("../config")
 const bcrypt = require('bcrypt');
@@ -42,6 +42,12 @@ router.post("/signup", async (req, res) => {
                     last_name : parsedPayload.last_name,
                 })
 
+                const userId = newUser._id;
+                
+                await Account.create({
+                    userId,
+                    balance: 1 + Math.random() * 10000
+                })
 
                 const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { algorithm: "HS256"});
 
@@ -70,9 +76,48 @@ router.post("/signup", async (req, res) => {
 })
 
 
+
+router.post("/signin", async (req, res) => {
+    payload = req.body;
+    parsedPayload = userSigninSchema.safeParse(payload);
+
+    // reject, if input not corrected as per zod.
+    if(!parsedPayload.success){
+        res.status(411).json({
+            msg:"You sent Wrong Inputs. Make sure the format is correct.",
+            errors: parsedPayload.error.errors
+        });
+    }
+
+    try {
+        const user = await User.findOne({ username: parsedPayload.username });
+        if (!user) {
+            return res.status(404).json({ msg: "User not found." });
+        }
+
+        // Compare the provided password with the hashed password
+        const isPasswordValid = await bcrypt.compare(parsedPayload.password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ msg: "Invalid Password." });
+        }
+
+        // Generate JWT token on successful login
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { algorithm: "HS256" });
+
+        res.status(200).json({
+            msg: "Login successful.",
+            token: token
+        });
+    } catch (err) {
+        console.error("Error during sign-in:", err);
+        res.status(500).json({ msg: "Server error. Please try again." });
+    }
+})
+
+
 router.put("/", authMiddleware, async(req, res) => {
     payload = req.body;
-    parsedPayload = userSignUpSchema.safeParse(payload);
+    parsedPayload = userUpdateSchema.safeParse(payload);
 
     // reject, if input not corrected as per zod.
     if(!parsedPayload.success){

@@ -23,7 +23,19 @@ const userSignUpSchema = z.object({
     .regex(/[\W_]/, "Password must contain at least one special character"),
 });
 
-const userUpateSchema = z.object({
+
+
+const userSigninSchema= z.object({
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be at most 30 characters"),
+  
+  password: z.string()
+    .min(8, "Password must be at least 8 characters long")
+    .max(64, "Password must be at most 64 characters")
+});
+
+const userUpdateSchema = z.object({
   first_name: z.string()
     .max(60, "First name must be at most 60 characters")
     .optional(),
@@ -49,5 +61,7 @@ const userUpateSchema = z.object({
 });
 
 module.exports = {
-    userSignUpSchema
+    userSignUpSchema,
+    userSigninSchema,
+    userUpdateSchema
 }

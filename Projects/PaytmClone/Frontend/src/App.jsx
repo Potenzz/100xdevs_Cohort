@@ -1,8 +1,5 @@
-import {
-  BrowserRouter,
-  Route,
-  Routes,
-} from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { RecoilRoot } from "recoil";
 import { Signup } from "./pages/Signup";
 import { Signin } from "./pages/Signin";
 import { Dashboard } from "./pages/Dashboard";
@@ -10,8 +7,8 @@ import { SendMoney } from "./pages/SendMoney";
 
 function App() {
   return (
-    <>
-       <BrowserRouter>
+    <RecoilRoot>
+      <BrowserRouter>
         <Routes>
           <Route path="/signup" element={<Signup />} />
           <Route path="/signin" element={<Signin />} />
@@ -19,8 +16,9 @@ function App() {
           <Route path="/send" element={<SendMoney />} />
         </Routes>
       </BrowserRouter>
-    </>
-  )
+    </RecoilRoot>
+  );
 }
 
-export default App
+export default App;
+

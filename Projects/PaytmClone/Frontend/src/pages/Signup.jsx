@@ -1,18 +1,71 @@
-import { useState } from "react"
-import { BottomWarning } from "../components/BottomWarning"
-import { Button } from "../components/Button"
-import { Heading } from "../components/Heading"
-import { InputBox } from "../components/InputBox"
-import { SubHeading } from "../components/SubHeading"
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { useNavigate } from "react-router-dom";
+import { BottomWarning } from "../components/BottomWarning";
+import { Button } from "../components/Button";
+import { Heading } from "../components/Heading";
+import { InputBox } from "../components/InputBox";
+import { SubHeading } from "../components/SubHeading";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"
+import {
+  firstNameAtom,
+  lastNameAtom,
+  usernameAtom,
+  passwordAtom,
+  userAtom
+} from "../store/atoms/users_atoms"; 
+import { errorMessageAtom } from "../store/atoms/error_atoms"; 
+
+
 
 export const Signup = () => {
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+
+    const [first_name, setFirstName] = useRecoilState(firstNameAtom);
+    const [last_name, setLastName] = useRecoilState(lastNameAtom);
+    const [username, setUsername] = useRecoilState(usernameAtom);
+    const [password, setPassword] = useRecoilState(passwordAtom);
+    const setUser = useSetRecoilState(userAtom)
     const navigate = useNavigate();
+    const [errorMessage, setErrorMessage] = useRecoilState(errorMessageAtom); 
+
+
+    const handleSignup = async (e) => {
+      setErrorMessage("");  
+      e.preventDefault(); 
+
+  
+      try {
+        const response = await axios.post("http://localhost:3000/api/v1/user/signup", {
+          username,
+          first_name,
+          last_name,
+          password
+        });
+
+        setUser({
+          first_name: first_name,
+          last_name: last_name,
+          username: username,
+      });
+
+        localStorage.setItem("token", response.data.token)
+        navigate("/dashboard")
+
+      } catch (error) {
+        if (error.response) {
+            // Handle validation errors
+            if (error.response.status === 411) {
+                const validationErrors = error.response.data.errors;
+                // Format the error messages for display
+                const formattedErrors = validationErrors.map(err => `${err.path[0]}: ${err.message}`).join(", ");
+                setErrorMessage(formattedErrors);
+            } else {
+                setErrorMessage(error.response.data.msg || "An error occurred. Please try again.");
+            }
+        } else {
+            setErrorMessage("No response from server. Please check your network connection.");
+        }
+    }
+    };
 
     return <div className="bg-slate-300 h-screen flex justify-center">
     <div className="flex flex-col justify-center">
@@ -27,22 +80,14 @@ export const Signup = () => {
         }} placeholder="Doe" label={"Last Name"} />
         <InputBox onChange={e => {
           setUsername(e.target.value);
-        }} placeholder="harkirat@gmail.com" label={"Email"} />
+        }} placeholder="vishnuhere" label={"Username"} />
         <InputBox onChange={(e) => {
           setPassword(e.target.value)
-        }} placeholder="123456" label={"Password"} />
+        }} placeholder="abc123@8" label={"Password"} />
         <div className="pt-4">
-          <Button onClick={async () => {
-            const response = await axios.post("http://localhost:3000/api/v1/user/signup", {
-              username,
-              firstName,
-              lastName,
-              password
-            });
-            localStorage.setItem("token", response.data.token)
-            navigate("/dashboard")
-          }} label={"Sign up"} />
+          <Button onClick={handleSignup} label={"Sign up"} />
         </div>
+        {errorMessage && <div className="text-red-500">{errorMessage}</div>} {/* Display error message */}
         <BottomWarning label={"Already have an account?"} buttonText={"Sign in"} to={"/signin"} />
       </div>
     </div>

@@ -55,7 +55,12 @@ router.post("/signup", async (req, res) => {
 
                 return res.status(201).json({
                     msg : "User Created Successfully",
-                    token : token 
+                    token : token ,
+                    user: {
+                        username : parsedPayload.data.username,
+                        first_name : parsedPayload.data.first_name,
+                        last_name : parsedPayload.data.last_name,
+                    }
                 })
 
             }catch(err){
@@ -106,7 +111,12 @@ router.post("/signin", async (req, res) => {
 
         return res.status(200).json({
             msg: "Login successful.",
-            token: token
+            token: token,
+            user: {
+                first_name: user.first_name, 
+                last_name: user.last_name,
+                username: user.username
+            }
         });
     } catch (err) {
         console.error("Error during sign-in:", err);

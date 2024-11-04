@@ -1,5 +1,8 @@
+import { useRecoilValue } from 'recoil';
+import { userAtom } from '..//store/atoms/users_atoms'; 
 
-export const Appbar = () => {
+export const Appbar = ({value}) => { 
+
     return <div className="shadow h-14 flex justify-between">
         <div className="flex flex-col justify-center h-full ml-4">
             PayTM App
@@ -10,7 +13,7 @@ export const Appbar = () => {
             </div>
             <div className="rounded-full h-12 w-12 bg-slate-200 flex justify-center mt-1 mr-2">
                 <div className="flex flex-col justify-center h-full text-xl">
-                    U
+                {value} 
                 </div>
             </div>
         </div>

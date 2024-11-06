@@ -56,11 +56,6 @@ router.post("/signup", async (req, res) => {
                 return res.status(201).json({
                     msg : "User Created Successfully",
                     token : token ,
-                    user: {
-                        username : parsedPayload.data.username,
-                        first_name : parsedPayload.data.first_name,
-                        last_name : parsedPayload.data.last_name,
-                    }
                 })
 
             }catch(err){
@@ -111,12 +106,7 @@ router.post("/signin", async (req, res) => {
 
         return res.status(200).json({
             msg: "Login successful.",
-            token: token,
-            user: {
-                first_name: user.first_name, 
-                last_name: user.last_name,
-                username: user.username
-            }
+            token: token
         });
     } catch (err) {
         console.error("Error during sign-in:", err);
@@ -193,5 +183,29 @@ router.get("/bulk", async(req, res)=>{
         })
     }
 })
+
+
+router.get('/me', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const user = await User.findById(userId).select('-password'); // Exclude password
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.json({
+            username: user.username,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            _id: user._id,
+        });
+    } catch (error) {
+        console.error("Error fetching user data:", error.message);
+        res.status(500).json({ msg: "Failed to fetch user data, try again later." });
+    }
+});
+
 
 module.exports = router;

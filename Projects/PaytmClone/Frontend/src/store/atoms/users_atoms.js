@@ -21,13 +21,12 @@ export const lastNameAtom = atom({
     key: 'last_name',
     default: '',
 });
-
-
 export const userAtom = atom({
     key: 'user',
     default: {
+        username: '',
         first_name: '',
         last_name: '',
-        username: '',
+        _id: '',
     },
 });

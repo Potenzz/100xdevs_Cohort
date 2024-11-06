@@ -1,5 +1,5 @@
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { usernameAtom, passwordAtom, userAtom } from "../store/atoms/users_atoms"; 
+import { usernameAtom, passwordAtom} from "../store/atoms/users_atoms"; 
 import { BottomWarning } from "../components/BottomWarning";
 import { Button } from "../components/Button";
 import { Heading } from "../components/Heading";
@@ -13,7 +13,6 @@ import { errorMessageAtom } from "../store/atoms/error_atoms";
 export const Signin = () => {
   const [username, setUsername] = useRecoilState(usernameAtom);
   const [password, setPassword] = useRecoilState(passwordAtom);
-  const setUser = useSetRecoilState(userAtom)
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useRecoilState(errorMessageAtom); 
 
@@ -26,11 +25,6 @@ export const Signin = () => {
         username, 
         password,
       });
-      setUser({
-        first_name: response.data.user.first_name,
-        last_name: response.data.user.last_name,
-        username: response.data.user.username,
-    });
 
       localStorage.setItem("token", response.data.token); 
       navigate("/dashboard"); 
@@ -63,6 +57,7 @@ export const Signin = () => {
         <div className="pt-4">
           <Button onClick={handleSignIn} label={"Sign in"} />
         </div>
+        {errorMessage && <div className="text-red-500">{errorMessage}</div>} 
         <BottomWarning label={"Don't have an account?"} buttonText={"Sign up"} to={"/signup"} />
       </div>
     </div>

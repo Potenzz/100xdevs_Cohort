@@ -11,7 +11,6 @@ import {
   lastNameAtom,
   usernameAtom,
   passwordAtom,
-  userAtom
 } from "../store/atoms/users_atoms"; 
 import { errorMessageAtom } from "../store/atoms/error_atoms"; 
 
@@ -23,7 +22,6 @@ export const Signup = () => {
     const [last_name, setLastName] = useRecoilState(lastNameAtom);
     const [username, setUsername] = useRecoilState(usernameAtom);
     const [password, setPassword] = useRecoilState(passwordAtom);
-    const setUser = useSetRecoilState(userAtom)
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useRecoilState(errorMessageAtom); 
 
@@ -41,11 +39,6 @@ export const Signup = () => {
           password
         });
 
-        setUser({
-          first_name: first_name,
-          last_name: last_name,
-          username: username,
-      });
 
         localStorage.setItem("token", response.data.token)
         navigate("/dashboard")

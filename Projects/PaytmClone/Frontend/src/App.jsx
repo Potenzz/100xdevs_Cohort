@@ -12,7 +12,6 @@ function App() {
   const isValid = useAuthRedirect(); 
 
   if (isValid === null) {
-    // You can show a loading spinner or fallback UI while the validation is in progress
     return <div>Loading...</div>;
   }
   return (

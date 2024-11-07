@@ -17,6 +17,7 @@
 
 ## Some other small things, i did inside this projects are:
 - ZOD types
+- Denouncing
 - JWT authenticaion
 - Middlewares
 - Routes Handling

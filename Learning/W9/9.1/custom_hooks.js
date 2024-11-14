@@ -68,3 +68,16 @@ class MyComponent extends React.Component {
     return <div>Hi there.</div>
   }
 }
+
+
+
+//---------------- Custom hooks -------------------
+
+// 1. should start with use. 
+// 2. should use interal hook, i.e. useEffect, useState.
+
+
+// --------------- adhoc
+// SWR - react hook for data fetching. 
+// window.navigator.online() - this returns true if online,
+

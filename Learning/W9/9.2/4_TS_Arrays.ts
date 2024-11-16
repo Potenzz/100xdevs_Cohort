@@ -24,5 +24,10 @@ function filterUsers(users: Users[]){
     return 0
 }
 
-
-// things to learn, enum, generics 
+filterUsers([{
+    name:"Vishn",
+    age:18
+},{
+    name:"noone",
+    age:10
+}])

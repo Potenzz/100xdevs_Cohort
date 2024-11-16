@@ -1,6 +1,3 @@
-// Interfaces,
-
-
 // ---------------- InterFaces -----------------
 
 // without interfaces :
@@ -102,3 +99,4 @@ class Employee implements Person {
 
 const e = new Employee("Vishnu", 10);
 e.greet("Hello ")
+

@@ -114,5 +114,3 @@ runAfter2s(printhere, "vishnu");
 
 // 4. noImplicitAny : keep it false, if you're beginner in Ts, compilier won't give error if you forget to give type.
 // 4. removeComments : keep it true, as in generated js files, it will not contain the comments of ts files.
-
-

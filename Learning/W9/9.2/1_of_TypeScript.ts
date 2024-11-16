@@ -114,3 +114,22 @@ runAfter2s(printhere, "vishnu");
 
 // 4. noImplicitAny : keep it false, if you're beginner in Ts, compilier won't give error if you forget to give type.
 // 4. removeComments : keep it true, as in generated js files, it will not contain the comments of ts files.
+
+
+
+
+
+// ------------ Importing , exporting code -----------------------
+
+// importing
+
+//in js
+// const express = require("express");
+//in ts
+// import express from "express";
+
+
+// exporting:
+export const a = 1;
+
+/// instead of module.exports 

@@ -1,0 +1,121 @@
+
+The types of DataBases :
+
+1. NoSQL DataBases : These have no structure, i.e. Schema-less. Very easy and fast way to store data. 
+    Example : MongoDB.
+
+2. Graph DataBases : Stores data in the form of Graph. Specifically useful in cases where Relationships need to be stored
+    (Social networks). Example : Neo4j
+
+3. Vector DataBases : Stores data in the form of Vectors, Useful in Machine Learning. 
+    Example : Pinecone
+
+4. SQL DataBases : Stores data in the form of rows, Very Popular for Full Stack Applications, 
+    Example : MySQL , PostgreSQL
+
+
+
+---------------------------------------
+
+Why not NoSQL? : 
+
+It's schemaless property make it ideal for bootstrapping a project fast, 
+But as the app grows, this property make it very easy to get data corrupted. 
+
+Because, Different rows can have Different Schema. 
+
+
+problems : 
+1. Can lead to inconsistent data, 
+2. Can cause runtime errors, 
+3. Is too flexible for an app that needs strictness.
+
+upsides:
+1. Can move very fast. 
+2. Can change Schema very easily.
+
+
+
+-----------------------------------------------------------------
+
+
+Why SQL ? 
+
+
+SQL DataBases have a strict Schema. They require you to :
+1. Define a schema.
+2. Put in data that follows the Schema.
+3. Update the schema as your app changes and perform Migrations.
+
+
+So, there are 4 parts when using an SQL DataBases( not connecting it to Node.js, just running it and putting the data in it)
+1. Running the DataBase.
+2. Using a library that lets you connect to it.
+3. Creating a table and defining it's schema.
+4. Run queries on the databases to interact with the data ( inserr/update/delete).
+
+
+----------------------------------------------
+Step 3: Creating a table. 
+
+A single database can have mulitple Tables. 
+
+SQL stands for Structured Query Language. It is a Language that lets you describe how/what you can put into db.
+
+Example Commands :
+
+CREATE TABLE users(
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+)
+
+Here are the basic SQL commands for CRUD (Create, Read, Update, Delete) operations on the users table:
+
+1. Create (Insert Data)
+INSERT INTO users (username, email, password) 
+VALUES ('exampleUser', 'user@example.com', 'securepassword123');
+
+2. Read (Retrieve Data)
+Read all users:
+SELECT * FROM users;
+
+Read a specific user by id:
+SELECT * FROM users WHERE id = 1;
+
+3. Update (Modify Data)
+UPDATE users 
+SET username = 'updatedUser', email = 'newemail@example.com'
+WHERE id = 1;
+
+4. Delete (Remove Data)
+DELETE FROM users 
+WHERE id = 1;
+
+----------------------------------------------
+
+# Working Practically with Postgre DB - 
+
+Get the url from neonDB. 
+like this : postgresql://myDB_owner:Password@ep-crimson-mode-a5mdi1ut.us-east-2.aws.neon.tech/myDB?sslmode=require
+Its structure : postgresql://username:password@host/database 
+
+
+libraries :
+1. psql : it is a Terminal based frontend to postgreSQL. It provides an interactive command line interface to the postgreSQL
+2. pg : It is a node.js library.
+
+
+Follow below command to work with a node.js app. (with typecript).
+
+npm init -y
+npx tsc --init
+
+change the rootDir to "./src" and outDir to "./dist" in tsconfig.json file.
+
+npm install pg
+npm install @types/pg
+
+Go to index.ts file in node-app folder for further notes.

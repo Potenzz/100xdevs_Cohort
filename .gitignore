@@ -11,6 +11,8 @@ node_modules/
 /package.json
 /package-lock.json
 
-
-App-1/
+#ignore dist folder
 dist/
+
+#ignore test app folder.
+App-1/

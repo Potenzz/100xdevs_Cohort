@@ -1,6 +1,5 @@
 import { Client } from 'pg';
 import * as dotenv from 'dotenv';
-import { get } from 'mongoose';
 dotenv.config();
 
 const client = new Client({

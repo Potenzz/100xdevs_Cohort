@@ -8,15 +8,282 @@ An ORM tool allows developers to interact with a database using the programming 
 SQL queries. It simplifies database operations by representing tables as classes and rows as objects, making data 
 manipulation more intuitive for developers.
 
-Benefits of ORM:
+## Benefits of ORM:
+
 Abstraction from SQL: Developers work with objects and methods instead of writing raw SQL queries.
-Improved productivity: Reduces boilerplate code and simplifies database interactions.
-Database independence: Many ORMs allow switching between different databases with minimal code changes.
-Code readability: Makes database operations more understandable by representing data as objects.
-Built-in query optimization: Some ORMs handle query optimization internally.
+TypeSafety : This take care of the returing type of any query.
+Automatic Migrations : ORM(more specifically Prisma) maintains the track of queries which eventually led to current schema of DB.
+Database independence: Many ORMs allow switching between different databases e.g. MongoDB,or etc with minimal code changes.
+
+
 Popular ORM Tools:
 JavaScript/TypeScript: Sequelize, TypeORM, Prisma
 Python: SQLAlchemy, Django ORM
 Java: Hibernate
 Ruby: Active Record (part of Ruby on Rails)
 PHP: Doctrine, Eloquent (part of Laravel)
+
+
+// ----------------------- PRISMA -------------------------
+
+Prisma is a modern ORM tool designed for Node.js and TypeScript developers. It simplifies database interactions by 
+providing an intuitive and type-safe way to work with databases.
+
+
+### Core Components of Prisma:
+1. **Prisma Client**: A type-safe query builder for performing database operations.
+2. **Prisma Migrate**: A tool to manage and version-control database schema changes.
+3. **Prisma Studio**: A web-based interface to explore and manage your database.
+
+### Supported Databases:
+- PostgreSQL
+- MySQL
+- SQLite
+- SQL Server
+- MongoDB (in preview)
+
+
+
+
+---------------------- Working With Prisma --------------------------
+
+-- Installations -- 
+
+#initialize node.js
+npm init -y 
+
+#add dependencies
+npm install typescript tsx @types/node --save-dev
+npm install prisma --save-dev
+
+
+#initialize typescript
+npx tsc --init
+--change rootDir and outDir to src and dist
+
+
+#initialize fresh prisma
+npx prisma init
+
+
+------------------------- After Installations --------------------
+Now, you'll have schema.prisma file, 
+
+1. Define the Data Model:
+Prisma uses a `schema.prisma` file to define your database schema. For example:
+```
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+```
+
+
+2. Migrate the Schema with command:
+```
+npx prisma migrate dev --name anyName 
+```
+
+
+
+3. Generate the Prisma Client:
+Client : The prisma autoGenerates Such clients(variables of databases), which can eventually used by developer.
+Run the following command to generate a type-safe client:
+```
+npx prisma generate
+```
+However, schema.prisma runs this command itself, when we migrated.(you can see in schema file)
+
+
+
+4. Use Prisma Client in Your Code:
+You can now use the client to interact with your database:
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function main() {
+  // Create a new user
+  const newUser = await prisma.user.create({
+    data: {
+      name: 'Jane Doe',
+      email: 'jane.doe@example.com',
+    },
+  });
+
+  console.log('Created User:', newUser);
+
+  // Fetch all users
+  const users = await prisma.user.findMany();
+  console.log('All Users:', users);
+}
+
+main()
+  .catch((e) => console.error(e))
+  .finally(async () => await prisma.$disconnect());
+```
+
+
+
+------------------------------- Relationship in Prisma -----------------------
+In Prisma, **relationships** are used to define how models in your database relate to one another. These relationships are 
+based on foreign keys in relational databases and are represented in the **`schema.prisma`** file. Prisma supports 
+one-to-one, one-to-many, and many-to-many relationships.
+
+---
+
+### **1. Defining Relationships in Prisma**
+
+Relationships are defined using **fields** that reference other models. You also use attributes like `@relation` to specify 
+the relationship details when needed.
+
+---
+
+#### --------------------------------- **a. One-to-One Relationship**
+A **one-to-one relationship** means that one record in a model is associated with exactly one record in another model.
+
+##### Example:
+```prisma
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String
+  profile  Profile?
+}
+
+model Profile {
+  id     Int    @id @default(autoincrement())
+  bio    String
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
+}
+```
+
+- **Explanation**:
+  - Each `User` can have one `Profile`.
+  - The `Profile` table has a foreign key `userId` referencing `User.id`.
+
+---
+
+#### --------------------------------- **b. One-to-Many Relationship**
+A **one-to-many relationship** means that one record in a model is associated with multiple records in another model.
+
+##### Example:
+```prisma
+model User {
+  id    Int      @id @default(autoincrement())
+  name  String
+  posts Post[]
+}
+
+model Post {
+  id      Int    @id @default(autoincrement())
+  title   String
+  content String
+  userId  Int
+  user    User   @relation(fields: [userId], references: [id])
+}
+```
+
+- **Explanation**:
+  - A `User` can have multiple `Post` records (e.g., blog posts).
+  - The `Post` table has a foreign key `userId` referencing `User.id`.
+
+---
+
+#### --------------------------------- **c. Many-to-Many Relationship**
+A **many-to-many relationship** means that multiple records in one model are associated with multiple records in another 
+model. Prisma uses a **join table** to implement this relationship.
+
+##### Example:
+```prisma
+model User {
+  id      Int      @id @default(autoincrement())
+  name    String
+  groups  Group[]  @relation("UserGroups")
+}
+
+model Group {
+  id      Int      @id @default(autoincrement())
+  name    String
+  members User[]   @relation("UserGroups")
+}
+```
+
+- **Explanation**:
+  - A `User` can belong to multiple `Group`s.
+  - A `Group` can have multiple `User`s.
+  - Prisma automatically creates an implicit join table to handle this relationship.
+
+---
+
+
+-----------------------------------------------------------
+
+### **2. Using Relationships in Queries**
+
+After defining relationships, Prisma Client allows you to query related data using **nested queries**.
+
+#### Fetch a User with Their Profile:
+```typescript
+const userWithProfile = await prisma.user.findUnique({
+  where: { id: 1 },
+  include: { profile: true },
+});
+console.log(userWithProfile);
+```
+
+#### Fetch a User with Their Posts:
+```typescript
+const userWithPosts = await prisma.user.findUnique({
+  where: { id: 1 },
+  include: { posts: true },
+});
+console.log(userWithPosts);
+```
+
+#### Fetch Groups with Their Members:
+```typescript
+const groupWithMembers = await prisma.group.findMany({
+  include: { members: true },
+});
+console.log(groupWithMembers);
+```
+
+---------------------------------------------------------
+
+### **3. Relation Attributes in Prisma**
+
+- **`@relation(fields, references)`**:
+  Specifies the foreign key (`fields`) and the primary key it references.
+
+- **`@unique`**:
+  Ensures one-to-one relationships by making the foreign key unique.
+
+- **`optional field (e.g., Profile?)`**:
+  Indicates the related record is optional.
+
+----------------------------------------------------------
+
+### **4. Cascading Deletes**
+
+To specify cascading behavior when deleting records, use the `onDelete` option:
+
+```prisma
+model User {
+  id      Int      @id @default(autoincrement())
+  posts   Post[]   @relation(onDelete: Cascade)
+}
+
+model Post {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id])
+}
+```
+
+In this example, deleting a `User` will automatically delete all their `Post` records.
+
+---

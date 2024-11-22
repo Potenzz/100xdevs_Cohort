@@ -1,0 +1,77 @@
+Aws - Amazon web Services - Cloud Services
+
+It lets you-
+
+1. Rent Servers
+2. Manage Domains
+3. Upload Objects (mp4 files, jpgs, mp3s)
+4. Autoscale Servers
+5. Create k8s clusters
+
+
+--------------------
+Here, we will be discussing about Renting Servers.
+
+## EC2 Servers
+
+VMs (Virtual Machines) on AWS are called EC2 Servers.
+
+EC2 stands for Elastic Compute Version 2.
+
+1. Elastic - Can increase/decrease the size of the machine.
+2. Compute - It is a machine
+
+
+-----------------------
+We can spin up a new instance of EC2 from AWS dashboard.
+
+Here, we've created a ubuntu Server manually from ec2 dashboard.
+
+now, open any folder, and paste your created key.pem .
+now, run command to connect to the server:
+
+ssh -i vishnu-backend-server-1st-keypair.pem ubuntu@44.203.198.107
+
+*vishnu-backend-server-1st-keypair is a .pem filename
+*ubuntu@publicIP of your instance.
+
+-- it might say:
+```
+>>
+The authenticity of host '44.203.198.107 (44.203.198.107)' can't be established.
+ED25519 key fingerprint is SHA256:jZy/+I19QC9TqwiSK8/tLJ3gClWfKMJPU1V6UPbboso.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? y
+Please type 'yes', 'no' or the fingerprint: yes
+Warning: Permanently added '44.203.198.107' (ED25519) to the list of known hosts.
+Bad permissions. Try removing permissions for user: NT AUTHORITY\\Authenticated Users (S-1-5-11) on file E:/MERN LEARNING/Learning/W11 - Deploying Applications/11.2 - AWS/testing/vishnu-backend-server-1st-keypair.pem.
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions for 'vishnu-backend-server-1st-keypair.pem' are too open.
+It is required that your private key files are NOT accessible by others.
+This private key will be ignored.
+Load key "vishnu-backend-server-1st-keypair.pem": bad permissions
+ubuntu@44.203.198.107: Permission denied (publickey).
+```
+
+Above errors, says us to have our .pem file more secure, and only readable with this one owner. for this.
+
+then run command(might not work in windows, use git bash for this specific command):
+chmod 400 vishnu-backend-server-1st-keypair.pem
+
+if git command doesn't work, use this below windows commands:
+
+whoami -- this specific command will give your specific username.
+
+
+-- set of commands, i ran for my own pc -- 
+icacls "vishnu-backend-server-1st-keypair.pem" /inheritance:r
+
+icacls "vishnu-backend-server-1st-keypair.pem" /grant:r "elitebook\administrator:R"
+
+icacls "vishnu-backend-server-1st-keypair.pem" /remove "NT AUTHORITY\Authenticated Users" "BUILTIN\Users"
+
+icacls "vishnu-backend-server-1st-keypair.pem"
+
+

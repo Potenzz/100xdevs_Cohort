@@ -16,3 +16,6 @@ dist/
 
 #ignore test app folder.
 App-1/
+
+#ignore all .pem files
+*.pem

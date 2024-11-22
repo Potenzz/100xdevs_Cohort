@@ -1,0 +1,124 @@
+Until now we run the backend (express) on local machine, which runs on certain port (e.g. 3000)
+But To Deploy Applications on the internet, there are few ways:
+
+1. Go to AWS, GCP, Azure, CloudFlare
+- Rent a VM(Virtual Machine) and Deploy you app.
+- Put it in an Auto Scailing group
+- Deploy it in a Kubernetes Cluster
+
+
+There are few downsides of doing this - 
+1. Taking care of how/when to scale.
+2. Base cost, even if noone visiting your website.
+3. Monitoring various servers to make sure no server is down.
+
+What if, you could just write the code and someone else could take care of those problems.
+
+There comes "ServerLess" Backend. 
+
+---------------------------------------- ServerLess Backend --------------------------
+
+
+A serverless backend is a cloud computing architecture where developers build and run applications or services without 
+managing the underlying server infrastructure. In this model, the cloud provider dynamically allocates machine resources 
+and manages the server operations, scaling, and maintenance.
+
+The term Serverless doesn't mean that there are no servers involved. instead, it means that developers and operators do not 
+have to worry about the servers.
+
+Here’s a breakdown of **serverless backends**:
+
+---
+
+### **Key Features**
+1. **No Server Management**  
+   Developers don’t need to provision or manage servers. The backend logic runs on servers maintained by the cloud provider.
+
+2. **Event-Driven Execution**  
+   Code execution is typically triggered by events such as HTTP requests, database updates, file uploads, or scheduled 
+   tasks.
+
+3. **Automatic Scalability**  
+   Serverless platforms automatically scale resources up or down based on the number of requests or workloads.
+
+4. **Pay-As-You-Go**  
+   You only pay for the compute time your code consumes, rather than for fixed server capacity.
+
+5. **Focus on Code**  
+   Developers can focus solely on writing code for their applications, as serverless abstracts the complexities of server 
+   and infrastructure management.
+
+---
+
+
+### Problem with this approach:
+
+1. More expensive to scale
+2. Cold Start Problem - First requests will always take time, as no servers are allocated if noone visits - but can be fixed by allocating atleast one server, warmpool.
+
+
+## Popular Serverless Platforms
+-AWS Lambda (with services like DynamoDB, S3, API Gateway)
+-Google Cloud Functions
+-Microsoft Azure Functions
+-Firebase Functions
+-Vercel/Netlify Functions (focused on web apps and JAMstack)
+
+
+
+
+
+--------------------- Creating ServerLess backend at CloudFlare Worker ----------------
+
+1. Created dummy worker from UI.
+
+-------
+
+2. Creating with command/code:
+command to initialize : npm create cloudflare -- myAppName
+
+
+-- The Wrangler(CLI for cloudflare), cloudflare expects you to just write logic to handle a request.
+Creating an HTTP server on top is handled by cloudflare.
+
+typically code written for worker is:
+
+```
+export default {
+	async fetch(request, env, ctx): Promise<Response> {
+		console.log(request.body);
+		console.log(request.headers);
+		console.log(request.method);
+
+		if(request.method === "GET"){
+			return Response.json({
+				message:"You sent a get requst."
+			});
+		}else{
+			return Response.json({
+				message:"You did not sent a get request."
+			})
+		}
+	},
+} satisfies ExportedHandler<Env>;
+```
+
+
+// THe wranger needs to have auth of cloudflare account, in order to push local code to cloudflare.use below command.
+npx wrangler login
+
+// below command, deploy the code to the cloudflare worker.
+npm run deploy
+
+
+// The express.js doesn't work here for worker. instead use other libraries to work with routing.
+libraries like "hono"
+
+--------------------------- Using Hono ---------------
+cmds:
+
+npm create hono@latest myAppName
+
+
+
+See hono-app folder.

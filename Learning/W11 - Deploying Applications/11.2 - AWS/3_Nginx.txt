@@ -1,0 +1,183 @@
+// Read 2_ReverseProxy_Basic.txt if you want to know why we use Nginx and what is Nginx.
+
+---------------------------------- Nginx Usage ------------------------------
+
+install it, it will automatically starts, and occupy port 80.
+
+sudo apt install nginx
+
+
+--------------------- Applying Reverse Proxy --------
+
+### **1. Access Nginx Configuration Files**
+You will configure the reverse proxy settings in the Nginx site configuration file.
+
+For simplicity, let's assume you want to set up a reverse proxy for a web application running on port 3000 on the backend server.
+
+First, navigate to the Nginx configuration directory:
+```bash
+cd /etc/nginx/sites-available
+```
+
+You can edit the default configuration file or create a new one for your site. To edit the default configuration file:
+```bash
+sudo nano /etc/nginx/sites-available/default
+```
+
+Alternatively, you can create a new file for your specific site:
+```bash
+sudo nano /etc/nginx/sites-available/mywebsite
+```
+
+---
+
+### **2. Configure Reverse Proxy**
+In the configuration file, you need to set up Nginx to act as a reverse proxy. Here’s an example configuration to forward requests from port 80 (HTTP) to a backend application running on port 3000:
+
+```nginx
+server {
+    listen 80;
+
+    # Your domain or IP address (use _ for default)
+    server_name yourdomain.com;
+
+    # Root directory for static files (optional)
+    root /var/www/html;
+
+    location / {
+        proxy_pass http://localhost:3000;  # Backend server (e.g., Node.js app running on port 3000)
+        proxy_http_version 1.1;            # Set HTTP version to 1.1 for WebSocket compatibility
+        proxy_set_header Upgrade $http_upgrade;  # WebSocket support
+        proxy_set_header Connection 'upgrade';  # WebSocket support
+        proxy_set_header Host $host;           # Preserve the original Host header
+        proxy_cache_bypass $http_upgrade;      # Disable caching for WebSocket requests
+    }
+}
+```
+
+This configuration does the following:
+- **listen 80**: Listens for incoming traffic on port 80 (standard HTTP port).
+- **proxy_pass http://localhost:3000**: Forwards all traffic to the backend server running on `localhost` at port `3000` (change the backend server's URL if necessary).
+- **proxy_set_header** directives: These ensure the correct headers are passed along with the request, especially for WebSocket connections and to preserve the original host.
+
+---
+
+### **3. Enable the Site Configuration**
+If you created a new configuration file (e.g., `mywebsite`), you need to enable it by creating a symbolic link in the `sites-enabled` directory:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/mywebsite /etc/nginx/sites-enabled/
+```
+
+If you modified the `default` file, you don't need to do this.
+
+---
+
+### **4. Test Nginx Configuration**
+Before restarting Nginx, it's important to check if the configuration syntax is correct. Run:
+
+```bash
+sudo nginx -t
+```
+
+If there are no errors, you'll see a message like:
+```
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+---
+
+### **5. Restart Nginx**
+After successfully testing the configuration, restart Nginx to apply the changes:
+
+```bash
+sudo systemctl restart nginx
+```
+
+---
+
+### **6. Verify the Reverse Proxy**
+Now, your Nginx server should be acting as a reverse proxy. You can verify it by accessing your domain or public IP (e.g., `http://yourdomain.com` or `http://<your-ec2-ip>`).
+
+If everything is set up correctly, the request will be forwarded to your backend server (e.g., a Node.js app on port 3000), and you'll see the response from the backend application.
+
+### **Optional: Enable HTTPS**
+If you want to enable HTTPS for your site (recommended for production), you can use **Let's Encrypt** to get a free SSL certificate.
+
+To do this, you'll need to install **Certbot** and the Nginx plugin:
+
+1. **Install Certbot**:
+   ```bash
+   sudo apt install certbot python3-certbot-nginx
+   ```
+
+2. **Obtain the SSL Certificate**:
+   Run the following command and follow the prompts to obtain and configure the SSL certificate:
+   ```bash
+   sudo certbot --nginx
+   ```
+
+Certbot will automatically configure your Nginx server for HTTPS.
+
+---
+
+### **Summary**
+- You’ve set up Nginx as a reverse proxy by modifying the Nginx configuration file.
+- The `proxy_pass` directive forwards traffic from the Nginx server to the backend.
+- You enabled the site configuration, tested, and restarted Nginx to apply the changes.
+
+With this configuration, Nginx will forward all incoming traffic to the backend service running on the specified port (e.g., port 3000), making it available via the Nginx server's port (80 for HTTP or 443 for HTTPS).
+
+--------------------------------- THat was from GPT ---------------------------
+
+What i did, is :
+
+
+remove the default nginx.conf file:
+sudo rm /etc/nginx/nginx.conf 
+
+
+create new, and paste our code there and restarte it:
+sudo vi /etc/nginx/nginx.conf 
+
+code :
+
+```
+events {
+    #Events directives ...
+}
+
+http { server {
+    listen 80;
+
+    # Your domain or IP address (use _ for default)
+    server_name yourdomain.com;
+
+    # Root directory for static files (optional)
+    root /var/www/html;
+
+    location / {
+        proxy_pass http://localhost:8080;  # Backend server (e.g., Node.js app running on port 8080)
+        proxy_http_version 1.1;            # Set HTTP version to 1.1 for WebSocket compatibility
+        proxy_set_header Upgrade $http_upgrade;  # WebSocket support
+        proxy_set_header Connection 'upgrade';  # WebSocket support
+        proxy_set_header Host $host;           # Preserve the original Host header
+        proxy_cache_bypass $http_upgrade;      # Disable caching for WebSocket requests
+    }
+}}
+```
+
+
+--Enter with i, paste, press esc and save&exit by :wq.--
+
+
+now, restart:
+sudo nginx -s reload
+
+
+Now, all the request coming from "yourdomain.com" will be sent to node.js running with port 8080.
+
+-------------------------------------------
+
+
+

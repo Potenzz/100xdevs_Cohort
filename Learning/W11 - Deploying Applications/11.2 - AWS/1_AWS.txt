@@ -23,7 +23,7 @@ EC2 stands for Elastic Compute Version 2.
 
 
 -----------------------
-We can spin up a new instance of EC2 from AWS dashboard.
+We can make up a new instance of EC2 from AWS dashboard.
 
 Here, we've created a ubuntu Server manually from ec2 dashboard.
 
@@ -66,6 +66,7 @@ whoami -- this specific command will give your specific username.
 
 
 -- set of commands, i ran for my own pc -- 
+```
 icacls "vishnu-backend-server-1st-keypair.pem" /inheritance:r
 
 icacls "vishnu-backend-server-1st-keypair.pem" /grant:r "elitebook\administrator:R"
@@ -73,5 +74,68 @@ icacls "vishnu-backend-server-1st-keypair.pem" /grant:r "elitebook\administrator
 icacls "vishnu-backend-server-1st-keypair.pem" /remove "NT AUTHORITY\Authenticated Users" "BUILTIN\Users"
 
 icacls "vishnu-backend-server-1st-keypair.pem"
+```
 
+
+----------------------------------------- Now, as we are connected to the instance ------
+
+Sometime, the instance doesnt have internet access, to fix it:
+
+Open the file:
+sudo vi /etc/resolv.conf
+
+Press i to enter insert mode.
+
+Replace the contents or add the following lines:
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+
+Save the file:
+Press Esc to exit insert mode.
+Type :wq and press Enter to write the changes and quit.
+
+----------------------------------------------------------------------------------------
+Now, as we're connected to ubuntu.
+
+we will clone lib like with command:
+```
+git clone https://github.com/hkirat/sum-server.git
+```
+
+then, it will bring sum-server folder.
+
+now install node in ubuntu. 
+```
+sudo apt update && sudo apt upgrade -y
+
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+
+sudo apt install -y nodejs
+
+node -v
+npm -v
+```
+
+
+
+there, we can run :
+npm install
+node index.js
+
+--------------------------------
+This specific file is running on port 8080. which is nowhere mentioned at security groupt at instance Aws.
+You need to manually, keep it open for port 8080. 
+
+now, you can reach the backend. 
+
+ip:8080/todos - it will give resulits.. so here we go. our backend is working on server.
+
+-----------------------------------------------------------------------------------------
+
+If, we need to make nodejs run forever: run it with command:
+
+npm install -g pm2
+pm2 start index.js
+
+now, even if you close the terminal, the backend will continue to run.
 

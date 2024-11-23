@@ -1,0 +1,172 @@
+This will give you understanding, why we're using Nginx.
+
+
+--------------------------------- All about proxy -------------------------------------------------
+A **proxy** is an intermediary server that acts as a bridge between a client and a destination server. It forwards 
+requests from the client to the server and then sends the server's response back to the client. Proxies can serve 
+various purposes, including improving security, enabling privacy, filtering content, and optimizing network 
+performance.
+
+---
+
+### **Types of Proxies**
+
+1. **Forward Proxy**:
+   - Used by clients to communicate with external servers.
+   - Acts as a gateway for outgoing requests.
+
+   - Common use cases:
+     - **Access control**: Restrict internet usage or block certain websites.
+     - **Caching**: Store copies of web resources for faster access.
+     - **Anonymity**: Hide the client’s IP address.
+     - **Routing and URL Rewriting**: Reverse proxies can route requests based on URL patterns and rewrite URLs to 
+        improve flexibility or performance.
+
+2. **Reverse Proxy**:
+   - Sits in front of servers and manages incoming client requests.
+   - Distributes requests to multiple servers behind it.
+   - Common use cases:
+     - **Load balancing**: Distribute traffic evenly across multiple servers.
+     - **Security**: Protect backend servers from direct exposure to the internet.
+     - **SSL Termination**: Handle encryption and decryption to reduce server load.
+
+3. **Transparent Proxy**:
+   - Works without requiring any client configuration.
+   - Commonly used in public networks (e.g., hotels, cafes) for monitoring or filtering traffic.
+
+4. **Anonymous Proxy**:
+   - Hides the client’s IP address to maintain privacy.
+   - Often used to bypass geo-restrictions or censorship.
+
+5. **High-Anonymity Proxy**:
+   - Conceals both the user’s identity and the fact that a proxy is being used.
+
+---
+
+
+### **Example**
+
+#### Without Proxy:
+- **Client** → **Server** (direct communication).
+
+#### With Proxy:
+- **Client** → **Proxy Server** → **Destination Server** → **Proxy Server** → **Client**.
+
+
+------------------------------------------ Reverse Proxy --------------------------------------
+
+As we know already about Reverse Proxy. By Reading Above.
+
+---
+
+### **Common Use Cases of Reverse Proxies**
+
+1. **Load Balancing**:
+   - A reverse proxy can distribute incoming client requests across multiple backend servers to balance the load 
+   and ensure that no single server is overwhelmed.
+   - This improves performance, reliability, and fault tolerance.
+   - Example:
+     - If a website has 3 backend servers, the reverse proxy can route requests in a round-robin manner to each 
+     server, ensuring traffic is evenly distributed.
+
+2. **Security and Anonymity**:
+   - Reverse proxies can hide the details of backend servers from the client, protecting sensitive infrastructure 
+   and reducing the attack surface.
+   - The reverse proxy can act as a barrier between the internet and backend services, mitigating the risk of 
+   attacks.
+   - Example:
+     - A reverse proxy can mask the true IP addresses of backend servers, making them less visible to potential 
+     attackers.
+
+3. **SSL Termination**:
+   - Reverse proxies can handle the encryption (SSL/TLS) for HTTPS connections, a process known as **SSL 
+   termination**. This reduces the load on backend servers, which no longer need to handle encryption and 
+   decryption.
+   - Example:
+     - The reverse proxy decrypts the HTTPS request, processes it, and forwards it as HTTP to backend servers, 
+     improving efficiency.
+
+4. **Caching**:
+   - Reverse proxies can cache responses from backend servers, reducing the load on those servers and speeding up 
+   response times for clients.
+   - Example:
+     - A reverse proxy can cache static content (like images or files) and serve them directly to the client, 
+     avoiding repetitive requests to the backend server.
+
+5. **Application Firewall**:
+   - A reverse proxy can act as a web application firewall (WAF), filtering and blocking malicious requests before 
+   they reach backend servers.
+   - Example:
+     - It can block requests that contain SQL injection attacks, cross-site scripting (XSS), or other security 
+     vulnerabilities.
+
+6. **Routing and URL Rewriting**:
+   - Reverse proxies can route requests based on URL patterns and rewrite URLs to improve flexibility or 
+   performance.
+   - Example:
+     - A reverse proxy might route requests for `/images` to one server, while requests for `/videos` are forwarded 
+     to a different server.
+
+7. **Centralized Authentication**:
+   - A reverse proxy can centralize user authentication, allowing it to authenticate users before forwarding 
+   requests to backend servers.
+   - Example:
+     - The reverse proxy could integrate with a single sign-on (SSO) service, ensuring that only authenticated 
+     users can access backend services.
+
+---
+
+### **Example of Reverse Proxy Setup**
+
+Let’s say you have a web application with multiple backend servers (e.g., `app-server1`, `app-server2`, and 
+`app-server3`), and you want to use a reverse proxy to manage incoming requests.
+
+1. **Client Request**: The client accesses `www.example.com` (your reverse proxy server).
+2. **Reverse Proxy**:
+   - Receives the request.
+   - Decides which backend server to forward the request to (e.g., using load balancing).
+   - Forwards the request to one of the backend servers.
+3. **Backend Server Response**: The backend server processes the request and sends the response back to the reverse 
+    proxy.
+4. **Reverse Proxy**:
+   - Sends the response back to the client, as if it came directly from the backend server.
+   
+The client is unaware that the reverse proxy is involved. It only interacts with the reverse proxy server.
+
+---
+
+### **Popular Reverse Proxy Tools**
+
+1. **Nginx**:
+   - A widely used open-source reverse proxy and web server.
+   - Supports load balancing, caching, SSL termination, and more.
+
+2. **HAProxy**:
+   - A high-performance reverse proxy and load balancer for HTTP and TCP-based applications.
+   - Popular for scaling applications and improving reliability.
+
+3. **Apache HTTP Server** (with `mod_proxy`):
+   - Apache can be configured to act as a reverse proxy using the `mod_proxy` module.
+
+4. **Traefik**:
+   - A modern reverse proxy and load balancer that integrates well with Docker and Kubernetes environments.
+   
+---
+
+### **Diagram of Reverse Proxy Setup**
+
+```
+Client → Reverse Proxy → Backend Server 1
+                            ↑
+                            ↑
+                    Backend Server 2
+                            ↑
+                            ↑
+                    Backend Server 3
+```
+
+
+
+------------------------------- Usage with Nginx ------------------------------
+
+In 3_Nginx.txt 

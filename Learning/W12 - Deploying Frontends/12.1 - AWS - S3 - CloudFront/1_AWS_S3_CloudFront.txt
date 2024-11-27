@@ -1,0 +1,85 @@
+----------- -Object Stores (S3), CDNs (CloudFront) -----------------
+
+
+Storage - We tend to store objects in "object store" i.e. S3. 
+
+Distribution - To Distrubute this stored objects via CDNs (Content Delivery Networks)
+
+---
+
+Suppose you're hosting a website with large images and videos. Without a CDN:
+- A user in Asia requests content from a server in the U.S., causing high latency.
+
+With a CDN:
+- The content is cached on a server in Asia, reducing the time it takes to deliver it to the user.
+
+---
+
+This CDN Distribution is beneficial Highly for frontends, as the file remains static. 
+But for Backend, as each value can be different, so it can't have cached values. so not suitable for CDN.
+
+---
+
+----------------------------- Using These Services -----------------------------
+
+This approach wont' work for frameworks that uses Server Side Rendering, like Next.js
+This will work for basic React Apps, HTML/CSS/JS apps.
+
+
+Go to the react app. and run below cmds
+```
+npm run build
+
+--if you want to see the dist folder, try to serve it ---
+npm i -g serve
+serve
+```
+
+----
+
+At this point, you'll have basic HTML/CSS/JS files, which can be deployed.
+You might think to host it on EC2, but this not good approach because.:
+
+So, same answer, Hosting Frontend them without CDNs doesn't make much sense.
+
+
+--------------------------------
+
+
+Create bucket at S3. 
+
+Upload the files presents at dist folder, not the dist folder, only the inside files..
+
+that's it for S3.
+
+
+---
+
+Now to distribute them -- Connecing to CloudFront --
+
+--- 
+Create CloudFront -
+
+- While Creating
+- to give access of S3 to your CloudFront, create new OAC.
+- give 'index.html' in "Default root object(optional)" field.
+
+Now you can create.
+
+Now add the OAC thing in S3. to give access at this side.   
+
+Now Your Files are deployed over CloudFront.
+
+-----------------------------------
+
+-- Connect your own domain to it --
+
+
+-----------------------------------
+
+At last -
+
+Add Error page 
+and Create Invalidation 
+
+

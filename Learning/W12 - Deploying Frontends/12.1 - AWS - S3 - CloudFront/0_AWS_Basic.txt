@@ -1,0 +1,158 @@
+Basics of S3, CDNs 
+
+
+---------------------- S3 -------------------------
+AWS S3 (Amazon Simple Storage Service) is a highly scalable, secure, and durable object storage service offered by 
+Amazon Web Services (AWS). 
+
+1. **Object Storage**:
+   - Stores data as *objects* in *buckets*.
+   - Each object consists of:
+     - **Data**: The file itself (e.g., images, videos, documents).
+     - **Metadata**: Key-value pairs describing the object (e.g., content type, last modified date).
+     - **Unique Identifier**: A key (name) used to retrieve the object.
+
+2. **Scalability**:
+   - Automatically scales to handle large amounts of data.
+   - No need to manage hardware or storage limits manually.
+
+3. **Durability and Availability**:
+   - Designed for **99.999999999% durability** (11 nines) by redundantly storing data across multiple facilities.
+   - Highly available with **99.99% uptime SLA**.
+
+4. **Storage Classes**:
+   - S3 offers multiple classes based on cost and performance:
+     - **S3 Standard**: For frequently accessed data.
+     - **S3 Intelligent-Tiering**: Automatically moves data between tiers based on usage.
+     - **S3 Standard-IA (Infrequent Access)**: For less frequently accessed data.
+     - **S3 Glacier**: Low-cost, long-term archival storage.
+     - **S3 Glacier Deep Archive**: The lowest-cost option for long-term storage.
+
+5. **Security**:
+   - Data encryption at rest and in transit.
+   - Access control via AWS Identity and Access Management (IAM), bucket policies, and Access Control Lists (ACLs).
+
+6. **Versioning**:
+   - Keeps multiple versions of an object, allowing recovery of older versions.
+
+7. **Data Lifecycle Management**:
+   - Automates transitioning objects between storage classes or deleting them after a set period.
+
+8. **Global Accessibility**:
+   - Accessible via the AWS Management Console, SDKs, REST APIs, and CLI.
+
+---
+
+### **Use Cases of AWS S3**
+1. **Backup and Recovery**:
+   - Store and retrieve backups for disaster recovery.
+2. **Big Data Analytics**:
+   - Store large datasets for processing with analytics tools like AWS Athena or AWS EMR.
+3. **Media Hosting**:
+   - Store and deliver images, videos, and other media files.
+4. **Application Data Storage**:
+   - Store files and assets for web and mobile apps.
+5. **Archiving**:
+   - Long-term storage of infrequently accessed data (e.g., logs, compliance records).
+6. **Static Website Hosting**:
+   - Host static websites directly from an S3 bucket.
+
+---
+
+### **How AWS S3 Works**
+1. **Create a Bucket**:
+   - A "bucket" is like a folder for storing objects.
+   - Each bucket has a unique name across all AWS regions.
+
+2. **Upload Objects**:
+   - Objects (files) are uploaded to the bucket using the AWS Console, SDKs, CLI, or API.
+
+3. **Set Permissions**:
+   - Control access using IAM policies, bucket policies, or ACLs.
+
+4. **Access Data**:
+   - Retrieve objects using their unique keys via URLs, SDKs, or APIs.
+
+5. **Manage Storage**:
+   - Use lifecycle policies to automate cost optimization and archival.
+
+---
+
+
+--------------------------------------- CDNs ------------------------------
+
+
+**CDNs (Content Delivery Networks)** are distributed networks of servers strategically located across multiple geographic regions. Their primary purpose is to deliver content to users faster and more efficiently by serving data from a server closest to the user.
+
+---
+
+### **How CDNs Work**
+When a user requests content (e.g., a webpage, image, or video):
+1. **Request Routing**: The CDN routes the user’s request to the nearest or most efficient edge server based on 
+factors like location, server load, and response time.
+2. **Caching**: The edge server delivers the cached version of the requested content, avoiding the need to fetch it 
+from the origin server.
+3. **Fallback to Origin**: If the requested content isn’t cached, the edge server fetches it from the origin 
+server, caches it for future requests, and serves it to the user.
+
+---
+
+### **Key Features of CDNs**
+1. **Content Caching**:
+   - Stores static assets (images, videos, CSS, JavaScript) on edge servers.
+   - Reduces the need to repeatedly fetch content from the origin server.
+
+2. **Global Distribution**:
+   - Servers are located worldwide to ensure minimal latency.
+
+3. **Load Balancing**:
+   - Distributes traffic across multiple servers to prevent overloading.
+
+4. **High Availability**:
+   - Ensures uptime by routing traffic to other servers in case of failure.
+
+5. **Dynamic Acceleration**:
+   - Optimizes the delivery of dynamic content (e.g., API responses) using techniques like TCP optimization.
+
+6. **Security**:
+   - Protects against DDoS attacks, bot traffic, and other threats.
+   - Features like Web Application Firewalls (WAFs) and SSL/TLS encryption.
+
+7. **Analytics**:
+   - Provides insights into traffic, performance, and security metrics.
+
+---
+
+### **Common Use Cases of CDNs**
+1. **Static Website Hosting**:
+   - Deliver static assets like images, CSS, and JavaScript files.
+2. **Streaming Media**:
+   - Stream videos or live events with minimal buffering.
+3. **E-Commerce**:
+   - Deliver product images and pages quickly to users globally.
+4. **API Acceleration**:
+   - Optimize and speed up API responses for applications.
+5. **Mobile Applications**:
+   - Enhance app performance by serving resources faster.
+
+---
+
+### **Popular CDN Providers**
+1. **Cloudflare**:
+   - Known for its free plan and robust security features.
+2. **Amazon CloudFront**:
+   - Integrated with AWS services for seamless content delivery.
+3. **Akamai**:
+   - One of the largest and most established CDNs.
+4. **Google Cloud CDN**:
+   - Optimized for Google Cloud users.
+5. **Fastly**:
+   - Focused on real-time content delivery and edge computing.
+---
+
+### **Real-World Example**
+Suppose you're hosting a website with large images and videos. Without a CDN:
+- A user in Asia requests content from a server in the U.S., causing high latency.
+
+With a CDN:
+- The content is cached on a server in Asia, reducing the time it takes to deliver it to the user.

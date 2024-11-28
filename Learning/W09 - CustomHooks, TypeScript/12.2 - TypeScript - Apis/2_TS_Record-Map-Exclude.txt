@@ -1,0 +1,78 @@
+----------------------------- Record and Map -------------------------------------
+
+Problem:
+
+For object like below example, see how the types are being declared.
+```
+type User = {
+    id : string; 
+    username:string;
+};
+
+type Users = {
+    [key:string]:User;
+}
+
+const users = {
+    "abc1":{
+        id:"abc1",
+        username :"Vishnu"
+    },
+    "abc2":{
+        id:"abc2",
+        username:"Rohit"
+    }
+}
+```
+
+
+Solution : Record gives you clearner types to objects.
+
+```
+interface User  {
+    id : string; 
+    username:string;
+}
+
+type Users = Record<string, User>
+
+const users:Users = {
+    "abc1":{
+        id:"abc1",
+        username :"Vishnu"
+    },
+    "abc2":{
+        id:"abc2",
+        username:"Rohit"
+    }
+}
+```
+
+
+
+
+
+------------------ Maps ----------------------------
+
+This gives you even fancier way to deal with objects, 
+
+```
+interface User  {
+    id : string; 
+    username:string;
+}
+
+const userMap = new Map<string, User>();
+
+userMap.set("abc1", {id:"1", username:"Vishnu"});
+userMap.set("abc2", {id:"2", username:"Rohit"});
+
+console.log(userMap.get('abc2'))
+```
+
+
+-------------------------- Exclude -----------------
+type Status = 'success' | 'error' | 'loading';
+type WithoutLoading = Exclude<Status, 'loading'>;
+
+const status: WithoutLoading = 'success'; // Only 'success' or 'error' is allowed

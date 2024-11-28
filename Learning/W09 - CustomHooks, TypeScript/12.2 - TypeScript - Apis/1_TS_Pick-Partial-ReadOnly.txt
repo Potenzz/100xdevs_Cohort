@@ -1,0 +1,104 @@
+// Normal Usage of interface, just to recap :
+
+```
+interface User{
+    name:string;
+    age:number;
+};
+
+function sumOfAge(user1:User, user2:User){
+    return user1.age + user2.age
+};
+
+const age = sumOfAge({name:"Vishnu", age:20}, {name:"Hero", age:24});
+console.log(age);
+```
+
+
+// -------------------------- Pick ---------------------
+ we can pick certain properties from an interface or type, if we need to have subset of that interface. for eg:
+
+```
+interface User{
+    id:number;
+    name:string;
+    age:number;
+    createdAt:Date;
+};
+
+type UserProfile = Pick<User, 'name' | 'age'>
+
+const displayUserProfile = (user:UserProfile) => {
+    console.log(`Name : ${user.name}, Age : ${user.age}`);
+}
+```
+
+// ---------------------------  Partial ----------------------
+If all the properties of an interface/type needs to be optional, you can simply use Partial keyword.
+
+```
+interface User{
+    id:number;
+    name:string;
+    age:number;
+    createdAt:Date;
+};
+
+type UserProfile = Pick<User, 'name' | 'age'>
+
+type UserProfileOptional = Partial<UserProfile>
+
+const displayUserProfile = (user:UserProfileOptional) => {
+    console.log(`Name : ${user.name}, Age : ${user.age}`);
+}
+```
+
+
+------------------ ReadOnly --------------------
+
+Problem:
+```
+const User = {
+    name:"Vishnu",
+    age : 19
+}
+User.name = "Rohit"
+console.log(User)
+```
+
+This will update the User value, although it is Const. same goes if you update a const array.
+
+here, we might not change it fully, like full User value with new value, there it will complain, but
+we can change the internal values, ....
+
+
+
+Solution:
+```
+type User = {
+    readonly name: string;
+    readonly age: number;
+}
+const UserValue: User = {
+    name:"Vishnu",
+    age:19
+}
+UserValue.name = "Rohit"
+```
+
+Here, TypeScript is complaining.
+This can be wriiten like this too:
+
+```
+type User = {
+    name: string;
+    age: number;
+}
+const UserValue: Readonly<User> = {
+    name:"Vishnu",
+    age:19
+}
+```
+
+
+It is useful while defining config files, as they won't be changed by mistake if any developer makes.

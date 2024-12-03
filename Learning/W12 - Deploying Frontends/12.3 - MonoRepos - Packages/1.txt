@@ -41,6 +41,24 @@ Frameworks:
 
 We'll use Turborepo.here.. 
 
+Install it by docs,
+
+Go through turbo-app-1:
+check apps/web folder, page.tsx, where i imported an component names as signupButton.
+
+and check, packages/ui folder, to know how i exported it, 
+
+keep an eye for package.json, it handled export/import.
+
+in packages/ui : package.json, add this:
+    "main":"./src/index.tsx",
+    "types":"./src/index.tsx",
+
+in apps/web/package.json add :
+"dependencies": {
+    "@repo/ui": "*",
+}
+
 
 
 

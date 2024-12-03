@@ -25,10 +25,24 @@ prereqs:
 3.add 'src' in '.npmignore'
 4.keep declaration true in tsconfig.
 
+Its code is availabe at app-1 folder.
+
 -----------------------------
 
 
 or use --------------------------- MonoRepos ----
+
+Frameworks:
+
+1. npm workspaces
+2. Lerna
+3. Turborepo
+
+
+We'll use Turborepo.here.. 
+
+
+
 
 
 

@@ -1,0 +1,65 @@
+This is just an introduction of docker, we'll learn more on next coming classes.
+
+---------------------- Docker ----------------------
+
+Docker lets you do lots of things, 
+
+1. It lets you containerise your applications.
+2. It lets you run other people's code+packages in your machine.
+3. It lets you run common software packages inside a container (for eg.- Mongo, Postgres, etc).
+
+
+Container -> They are mini machines with their own file system and network.
+
+
+-----------------------------------------------------
+Creating Mongodb/Postgres containers.
+
+Just like you can push your code to github.
+You can push images to docker registries. 
+
+popular registries are:
+dockerhub - the official 
+aws registries
+google registries
+
+
+basic commmands:
+```
+docker run 
+docker ps 
+docker kill
+```
+
+------- commands to create container -
+
+----- Mongo ----
+
+1. run the images :
+```
+docker run mongo 
+```
+
+it will run on port 27017. 
+
+2. map the port
+```
+docker run -p 27017:27017 mongo
+```
+
+
+-------- Postgres -------------
+
+1. run the image:
+```
+docker run -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres
+```
+
+the connection string would be:
+postgresql://postgres:mysecretpassword@localhost:5432/postgres
+
+
+
+
+
+

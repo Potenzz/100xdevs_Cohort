@@ -55,9 +55,38 @@ docker run -p 27017:27017 mongo
 docker run -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres
 ```
 
+or 
+```
+docker run --name postgres-container -e POSTGRES_PASSWORD=yourpassword -d -p 5432:5432 postgres
+```
+
+where
+--name postgres-container: The name of your container.
+-e POSTGRES_PASSWORD=yourpassword: Sets the password for the postgres user.
+-d: Runs the container in detached mode.
+-p 5432:5432: Maps port 5432 of your host machine to the container.
+postgres: The official PostgreSQL image.
+
+-----
+
 the connection string would be:
 postgresql://postgres:mysecretpassword@localhost:5432/postgres
 
+
+2. to go through the container, and use bash commands
+```
+docker exec -it id_of_postgres_container /bin/bash
+```
+
+3. now, to connect to the postgres through bash commands
+```
+psql -h localhost -d postgres -U postgres
+```
+
+now, you can run psql commands there, without installing it.
+
+
+-----------------------------------------------------
 
 
 

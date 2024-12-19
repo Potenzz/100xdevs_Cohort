@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "env": "dotenv -e .dev.vars",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
@@ -12,9 +13,16 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.5.2",
     "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/pg": "^8.11.10",
+    "dotenv-cli": "^7.4.4",
     "prisma": "^6.1.0",
     "typescript": "^5.5.2",
     "vitest": "2.1.8",
     "wrangler": "^3.60.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^6.1.0",
+    "@prisma/client": "^6.1.0",
+    "pg": "^8.13.1"
   }
 }

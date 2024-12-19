@@ -8,6 +8,11 @@ So, there will be a Connection Pool, which will connect the workers to the datab
 
 Go through this doc : https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare
 
+
+This doc, is basically tell to connect a db with cloudflare worker. 
+no connection pooling, it is already handled by neondb(the postgres db provider)
+there exists other for production level, ie. PgBouncer something. 
+
 ---- In details here it is ---------
 
 Connection pooling is a technique used to manage database connections efficiently by reusing a pool of 

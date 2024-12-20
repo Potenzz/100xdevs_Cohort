@@ -10,8 +10,12 @@ Go through this doc : https://www.prisma.io/docs/orm/prisma-client/deployment/ed
 
 
 This doc, is basically tell to connect a db with cloudflare worker. 
-no connection pooling, it is already handled by neondb(the postgres db provider)
-there exists other for production level, ie. PgBouncer something. 
+no connection pooling is done here, it is already handled by neondb(the postgres db provider)
+
+However to do connection pooling manually for production level stuff:
+
+IF you're usign prisma with Postgres, then use Prisma-Accelearate.
+If you're using just Postgres, then use pgBouncer. 
 
 ---- In details here it is ---------
 

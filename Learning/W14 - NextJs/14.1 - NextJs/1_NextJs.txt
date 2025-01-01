@@ -1,0 +1,125 @@
+Topics here : 
+
+NextJs Need,
+SEO Optimisation, 
+Waterfalling problem, 
+Nextjs Offerings, 
+Bootstrap Nextjs App, 
+Routing in NextJs, 
+SSR vs CSR, 
+Layout.tsx, 
+
+
+
+--------------------- NextJs Need ----------------
+
+
+NextJs was the framework introduced because of some minor incoveiniences in React.
+
+1. In react, we have to maintain a separate Backend project for API Routes.
+2. React does not provide out of the box routing, (we have to use react-router-dom)
+3. React is not SEO optimised
+    3.1. Not exactly true because of React Server Components, will discuss it soon below.
+4. Waterfalling problem
+
+
+
+-------------------- SEO Optimisation ------------------------
+
+The Google/bing has crawlers, that hit website to know what website does.
+
+It ranks website, based on the HTML it gets back.
+It generally don't run the JS, to see final output it renders.
+
+---
+
+In React Case, The React sends the very first file of html contains nothing about actual website.
+However, eventually the other files comes and renders the site, 
+
+but the crawlers doesn't wait for them, it just get the first coming html file. 
+
+Hence, React is not optimised for SEO.
+
+
+-------------------- Waterfalling Problem ------------------------
+
+In React, to get a response of request from server. it goes thourgh certain chain..
+
+First, it fetch the index.html from CDN(Content Delivery Network).
+then, fetch script.js from CDN.
+then, check if user loggedin, or any authenctication.
+then, fetch the actual blogs let say.
+
+that is a four round trip. happen one after another, sequentially, not asynchronously.
+
+Hence it is a Waterfalling problem, each step falls to next step to get the last one.
+
+
+---
+
+NextJs, here send the index.html and the blogs along with it, for the user and crawlers.
+then it fetch other scripts, ..
+
+
+------------------------- NextJs Offerings -----------------------
+
+1. Server Side Rendering - Get's rid of SEO problem.
+2. API Routes - Single codebase with frontend and backend.
+3. File based routing, no need of react-router-dom
+4. Bundle size opitmisation, Static site generation.
+5. Maintained by vercel team.
+
+Downside. 
+1. Can't be distributed via CDN (Content Delivery Network). always need a server running thst does server side 
+rendering, hence it is expensive.
+2. Very opinionated, very hard to move out of it, i.e hard to get back to react.
+
+
+----------------------- Bootstrap NextJs project -----------------
+
+```
+npx create-next-app@latest
+```
+
+Select according to your needs.
+
+
+--- File structure 
+
+1. next.config.ts - NextJs configuration file.
+2. tailwind.config.ts - tailwind configuration file.
+3. app - contains all the code/Components/routes/layout/apis
+
+
+
+------------------- Routing in NextJs -----------------------------
+
+In react we did routing with react-router-dom.
+
+In NextJs, we have File Based Routing. 
+It means the way you create your files, describes what renders on a route.
+
+1. add folder named signup in app folder, and add file page.tsx inside signup.
+app/signup/page.tsx.
+
+
+
+--------------------- Server Side Rendering ----------------------
+
+Now, when you go to route, signup, 
+You will get all the component, text in the very first html file itself.
+
+The crawler no need to run any javascript file, since it is server side rendering.
+
+
+--- what is SSR and CSR ?? -
+Server-Side Rendering (SSR): The server generates the full HTML for a page and sends it to the browser, providing 
+faster initial load and better SEO but slower interactivity. Example: Next.js.
+
+Client-Side Rendering (CSR): The browser gets a basic HTML, and JavaScript builds the page content dynamically, 
+enabling rich interactivity but with slower initial load and potential SEO challenges. Example: React SPA.
+
+
+------------------------------- Layout.tsx ---------------------------
+
+Layout let you wrap all child pages inside some logic.

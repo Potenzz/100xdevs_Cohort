@@ -8,6 +8,8 @@ Bootstrap Nextjs App,
 Routing in NextJs, 
 SSR vs CSR, 
 Layout.tsx, 
+Components,
+Client vs Server Component
 
 
 
@@ -102,7 +104,8 @@ It means the way you create your files, describes what renders on a route.
 1. add folder named signup in app folder, and add file page.tsx inside signup.
 app/signup/page.tsx.
 
-
+  then the route will be localhost/signup.
+  it will show page.tsx content.
 
 --------------------- Server Side Rendering ----------------------
 
@@ -123,3 +126,148 @@ enabling rich interactivity but with slower initial load and potential SEO chall
 ------------------------------- Layout.tsx ---------------------------
 
 Layout let you wrap all child pages inside some logic.
+
+It basically a template for all the pages, 
+Understand it as, you can add navbar for every page, just to write it above childer in layout.tsx
+
+```
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <div className="p-4 border-b"> Medium website</div> // this is appbar
+        {children}
+      </body>
+    </html>
+  );
+}
+```
+
+
+------ Using layout.tsx as Sub Layout---------------
+
+We can also use layour for particular page. like for signup page, if you want to add banner, for each route, 
+sub-route under signup page.
+
+
+app/signin/layout.tsx :
+
+```
+export default function (
+    { children }: { children: React.ReactNode }
+) {
+
+    return <div>
+        <div className="border-b text-center">
+            20% off on next 10 days
+        </div>
+        {children}
+    </div>
+}
+```
+
+
+Now, this banner will be shown at route, localhost/signin.
+
+
+--------------------------- Now, what if to add this banner at both route signin, and signup ---------
+
+---
+1st approach -
+
+Structure fils like this:
+
+app/auth/
+auth will have two folder named signin and signup. 
+and auth will have layout.tsx.
+
+now, both route localhost/auth/signin and localhost/auth/signup. will have that banner.
+
+---
+2nd approach, if you need the route to be the same, i.e localhost/signin and localhost/signup.
+
+then just add () curly brackets for the folder name.
+
+app/(auth)/
+
+now, route will not have auth in itself.
+
+
+----------------------- Components --------------------
+
+Add top level, add Components folder, i.e. my-app/components/
+make sure this folder is mentioned in tailwind.config.ts
+
+
+Just like React, add Signin as <SigninComponent/> in page.tsx files.
+and add all component logic in components/Signin.tsx .
+
+Check each file in folder, for more clarity.
+
+
+---  Button onClick()  ---
+
+
+When we use this code:
+```
+export default function SigninComponent() {
+    function handler(){
+        console.log("hi there")
+    }
+    return <div>
+                      <button
+                        onClick={handler} 
+                         type='button'
+                         className='mt-8 w-full text-white bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2'
+                      >
+                         Sign in
+                      </button>
+        <div/>
+}
+```
+
+
+The way we are using onClick, the Nextjs is giving errors.
+```
+ Server ] Error: Event handlers cannot be passed to Client Component props.
+  <button onClick={function handler} type=... className=... children=...>
+                  ^^^^^^^^^^^^^^^^^^
+If you need interactivity, consider converting part of this to a Client Component.
+```
+
+
+Let see, what is Client and Server Component.
+
+
+---------------------------- Client and Server Component --------------------------
+
+NextJs expects you to identify all your components as either client or server.
+As the name suggests.
+
+1. Server components are rendered on the server.
+2. Client components are pushed to the client to be rendered.
+
+By default, all components are server components.
+
+
+If you want't to mark a components as a client component, you need to add the following to the top of the component -
+
+"use client"
+
+--
+
+When should you create client component?
+
+1. Whenever you get an error that tells you that you need to create a client component.
+2. Whenever you're using something that the server doesn't Understand(useEffect, useState, onClick ...)
+
+Rule of the thumb is to defer the use of client as much as possible.
+
+--- So instead of making whole form as client, just make a new button comp, and make that only as client and use it.

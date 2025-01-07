@@ -1,0 +1,89 @@
+Basics,
+Data fetching in React,
+Data fetching in NextJs,
+Loading.tsx,
+
+
+------------------------------------------------------
+
+Next.js is a full stack framework.
+
+This means a same process can handle both frontend and backend.
+like, The App running on aws, is returing the frontend and providing data via APIs as well.
+
+
+Why?
+1. Single codebase for all your codebase.
+2. No Cors issues, single domain name for your FE and BE.
+3. Ease of deployment, deploy a single codebase.
+
+
+
+---------- Recap of Data fetching in React ----------
+
+-- Data fetching happens on client.
+
+Browser -> localhost/blogs -> CDN(content delivery network).
+Browser <- Empty Html <- CDN.
+Browser -> Request Js file -> CDN.
+Browser <- get Js file <- CDN.
+
+Browser -> hit localhost/api/v1/blogs -> backend server.
+Browser <- gets back the data <- backend server.
+
+
+----------- Data fetching in Nextjs ---------------------
+
+You should fetch the blogs details on the server side and pre-render the page before returing it to the user.
+
+Browser -> Requsts, blogs page -> Nextjs server -> Give me blog details -> Backend.
+Browser <- returns html page, with blogs <- Nextjs server <- Returs user json <- Backend.
+
+
+
+----------------------- Code for the same:
+
+```
+import axios from "axios";
+
+async function getBlogData(){
+  const response = await axios.get("https://backend-medium-100xdevs.vishnu10kumar11.workers.dev/api/v1/blogs/7b852597-ce00-450f-a039-961a76453787",
+    {
+      headers:{
+        Authorization:"Bearer eyJhbAuq4"
+      }
+    }
+  );
+
+  return response.data;
+
+}
+
+//async component, can't work in react.
+export default async function Home() {
+  const BlogDetails = await getBlogData();
+
+  return (<div>
+    {BlogDetails.blog.title}
+    {BlogDetails.blog.content}
+    <div>Helo</div>
+    </div>
+  )
+}
+```
+
+---------------- How to add loader, when req takes time -----------
+
+Make a file, app/loading.tsx, 
+
+With code:
+```
+export default function(){
+    return <div> Loading ..</div>
+}
+```
+
+Now, this specific page, will have whatever loading.tsx page has as loader/skeleton.
+
+Note: but the crawler will too get loading skeleton,
+so for landing page, better to keep it static. 

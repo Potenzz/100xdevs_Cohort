@@ -1,0 +1,111 @@
+Basics,
+Create Backend,
+Using the same backend,
+Routing/Navigating,
+Database,
+
+
+
+
+------------------------
+NextJs lets you write backend code, like express does.
+
+
+The benfits:
+1. Code in single repo.
+2. All standard things you get in a backend framework like express.
+3. Server Components can directly talk to the backend.
+
+
+
+-------------- Lets create the backend in my-app ---------
+Follow this rule:
+
+1. make new folder called api inside app folder. 
+2. add folder inside of api, called user.
+3. add a file inside user, named route.ts.
+
+the route will be : localhost/api/user 
+
+
+--- Initialize get route in route.ts ---
+```
+export async function GET(){
+    return Response.json({username:"Vishnu", email:"vishn@gmail.com"})
+}
+```
+
+
+
+--- Use the same in page.tsx i.e Frontend ---
+
+```
+import axios from "axios";
+
+async function getUserData(){
+  const response = await axios.get("http://localhost:3000/api/user"
+  );
+  return response.data;
+}
+
+//async component, can't work in react.
+export default async function Home() {
+  const UserDetails = await getUserData();
+
+  return (<div>
+    {UserDetails.username}
+    {UserDetails.email}
+    <div>Helo</div>
+    </div>
+  )
+}
+
+```
+
+------------- Routing/Navigating -------------------------
+```
+import { useRouter } from "next/navigation"
+
+export function Signup() {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+   const Router = useRouter();
+
+   const  sendRequest = async() => {
+         await axios.post("http://localhost:3000/api/user",{
+            username, 
+            password
+         });
+
+         Router.push("/") // redirect to root route.
+     }  }
+```
+
+---------------- Adding Database ----------------
+
+With prisma:
+
+1.
+```
+npm install prisma
+
+npx prisma init 
+```
+
+
+2. in schema.prisma add this:
+```
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  password String
+}
+```
+
+3. Migrate the db:
+```
+npx prisma migrate dev --name init_schema
+```
+
+4. Generate the client:
+npx prisma generate

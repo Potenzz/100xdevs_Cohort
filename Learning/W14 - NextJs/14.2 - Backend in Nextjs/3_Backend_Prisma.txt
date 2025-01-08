@@ -1,0 +1,154 @@
+Approach of Calling APIs, in nextJs, 
+SINGLETON PrismaClient, 
+
+
+-------------------------- Approach of calling APIs in nextjs ---------------------------
+
+
+--------- This this 1st Approach code:
+
+Component: 
+```
+export function Signup() {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+   const Router = useRouter();
+
+   const  sendRequest = async() => {
+      try{
+         await axios.post("http://localhost:3000/api/user",{
+            username, 
+            password
+         });
+         Router.push("/")
+      }catch(e){
+         console.log(e)
+      }
+   }
+
+   return (
+                     <button
+                        onClick={sendRequest}
+                        type='button'
+                     >
+                        Sign up
+                     </button>
+   );
+}
+```
+
+
+API:
+```
+const client = new PrismaClient();
+
+export async function POST(req: NextRequest){
+    const body = await req.json();
+
+    //should add zod validation.
+
+    const user = await client.user.create({
+        data:{
+            username:body.username,
+            password:body.password
+        }
+    })    
+
+    return Response.json({
+        message:"You are logged in!"
+    })
+}
+```
+
+----------------------
+
+--- Here, The api is connecting with the db, and comp is using the api, 
+However, in nextjs the comp can directly connect with the db. 
+So no need to put load to make api call for such cases. 
+
+NOTE : But, this 2nd approach, is only meant for ServerSideComp, not for ClientSideRendering. 
+So, if your comp use "use client", then don't use this approach of defining prisma client.
+
+NOTE 2: Still, apart for above note, if we keep of defining prisma client in each file, then 
+we will have multiple connection to database, with only this one application. 
+
+And, will have error as well, so we will have to use here, SINGLETON prisma. Read Below about SINGLETON Prisma.
+
+
+-------------------- 2nd Approach : 
+
+Component:
+
+```
+import { PrismaClient } from "@prisma/client";
+import {  useState } from "react";
+import { useRouter } from "next/navigation"
+
+const client = new PrismaClient();
+
+export function Signup() {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+   const Router = useRouter();
+
+   const sendRequest = async() => {
+      try{
+         const user = await client.user.create({
+            data:{
+                username,
+                password
+            }
+        })  
+         Router.push("/")
+
+      }catch(e){
+         console.log(e)
+      }
+   }
+
+   return (
+                     <button
+                        onClick={sendRequest}
+                        type='button'
+                     >
+                        Sign up
+                     </button>
+   );
+}
+```
+
+
+
+-------------------------------------- SINGLETON PrismaClient ---------------------------------------
+
+Create a my-app/lib/prisma.ts:
+
+```
+import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma =
+  globalForPrisma.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+```
+
+--- using this client:
+```
+import { ChangeEventHandler, useState } from "react";
+import { prisma } from "@/lib/prisma";
+
+export function Signup() {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+
+   const sendRequest = async() => {
+         const user = await prisma.user.create({
+            data:{
+                username,
+                password
+            }
+        })  
+```
+

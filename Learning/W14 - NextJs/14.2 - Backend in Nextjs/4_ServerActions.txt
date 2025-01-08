@@ -1,0 +1,106 @@
+
+
+-------- without ServerActions --------------
+
+
+Like we saw in file 3_Backend_Prisma.txt , 
+
+
+To reduce the load of making api call from serverComp to nextjs server. 
+we can directly use database.. 
+
+With the same logic, 
+
+
+The browser can make api call, when let say click a button, 
+To make the same api call inside the server, we can do it by defining a function. 
+
+in other words,
+
+We can define a separate function which does certain things, 
+Then, a certain endpoint of api can call that function, 
+and the serverComp can call that function as well. 
+
+
+
+-------------- ServerActions --------------------
+
+Is simple words, 
+
+We can make a function, which can be called by serverComp i.e inside nextjs. 
+But, the same function can be called by browser, so the browser won't make a call to the endpoint,
+instead just a sort of call to the function. 
+
+
+
+code in file : my-app/actions/user.ts:
+```
+"use server"
+
+import { prisma } from "@/lib/prisma"
+
+export const sendRequest = async(username:string, password:string) => {
+      try{
+         const user = await prisma.user.create({
+            data:{
+                username,
+                password
+            }
+        })  
+        return true;
+
+      }catch(e){
+         console.log(e)
+         return false;
+      }
+   }
+```
+
+
+Using this:
+```
+import { sendRequest } from "@/actions/user";
+
+export function Signup() {
+   const [username, setUsername] = useState("");
+   const [password, setPassword] = useState("");
+
+   return (
+                     <button
+                        onClick={()=>{
+                           sendRequest(username, password)
+                        }}
+                        type='button'
+                     >
+                        Sign up
+                     </button>
+   )
+```
+
+
+
+Notes:
+
+---
+THe server actions files, needs to be specifically defined "use server". 
+so that if a clientComp use this, then still it will be a server function. 
+
+If not defined, then this will be treated as client function and will be sent to the client.
+which should not be done.
+
+
+---
+So, when the user will click on submit button, a request will go out, means nextjs takes it as a server action
+that needs to be called
+
+
+
+Benifits of server actions:
+
+1. single function can be used in both client and server Components. 
+2. Gives you types of the function response on the frontend (very similar to trpo)
+3. Can be used in forms. 
+
+
+
+

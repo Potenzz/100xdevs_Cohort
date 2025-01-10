@@ -1,0 +1,228 @@
+Why docker.
+Containerization.
+Inside of Docker.
+Images vs Container. 
+Port Mapping.
+Basic commands of docker. 
+DockerFile.
+Creating Image of repo.
+
+
+
+------------------------------- Why Docker -----------------------------
+
+Docker/Container are imp for few reasons:
+
+1. Kubernetes/Container orchestration
+2. Running processes in isolated environment. 
+3. Starting projects/auxiliary services locally.
+
+
+-------------------------------- Containerization -----------------------
+
+Containers are way to package and distribute software applications in a way that makes them easy to deploy and run 
+consistently across different environments. They allow you to package an appication, along with all its dependencies
+and libraries, into a single unit that can be run on any machine with a container runtime, such as Docker.
+
+So, the Docker is container runtime.
+
+
+-- Why Container --
+1. Everyone has different operating systems. 
+2. Steps to run a project can very based on OS.
+3. Extremeley harder to keep track of dependencies as project grows.
+
+
+-- Benifits -- 
+
+1. Let you describe your configuration in a single file.
+2. Can run in isolated environment.
+3. Makes local setup of OpenSource projects a breeze
+4. Makes installing auxiliary services/DBs easy.
+
+
+For reference:
+1. for mongo: docker run -d -p 27017:27017 mongo
+2. Docker isn't the only way to create containers.
+
+
+----- History of Docker ------
+
+Docker is a YC backend company, started in -2014.
+
+They envisioned a world where containers would become mainstream and people would deploy their applications using 
+them.
+
+That is mostly true today.
+
+Most projects that you open on Github will/should have docker files in them(away to create docker conatiner)
+
+----- Docker installing ------
+
+just google it, and install it, you can install gui of docekr as well, because it helps initially.
+
+Run, cmd : docker 
+just to make sure it is installed.  
+
+
+
+----------------------------------- Inside Docker ---------------------------
+
+-- in easy words:
+Terminal talks to docker engine, (for example: docker run mongo)
+Docker engine talks with Docker Registry, i.e fetches image of mongo, if not fetched earlier.
+Docker engine creates container of mongo image.
+
+
+-- in deep:
+Terminology;
+
+1.  Docker Engine : It is an open-source Containerization technology that allows developers to package application
+    into container. 
+    Container are standardized executable components combining application source code with the opereating system(OS) libraries and dependencies required to run that code in any environment.
+
+2.  Docker CLI : The command line interface lets you talk to the docker engine and lets you start/stop/list 
+    containers. Docker CLI isn't the only way to talk, you can talk with docker restAPIs.
+
+3.  Docker Registry : The docker registry is how Docker makes money. It is similar to github, but it lets you push 
+    image rather than sourcecode, 
+
+
+------------------------------------ Images vs Container -----------------------------------
+
+DockerImage: A docker image is a lightweight, standalone, executable package that includes everything needed to run
+a piece of software, including the code, a runtime, libraries, environment variables, and config files. 
+
+
+DockerContainer : A container is a runnning instance of an image. It encapsulates the application or service and 
+its dependencies, running in an isolated environment. 
+
+------------------------------------- Port Mapping -----------------------------------------
+
+```
+docker run -d -p 27018:27017 mongo
+```
+
+Means, any req comes with port 27018 on my main machine, will be transferred to 27017 on mongo conatiner.
+
+You can change host port : 27018 to any port, 
+but can't change mongo port 27017 because it is default port of mongo.
+unless you have reconfigured MongoDB inside the container to listen on a different port.
+
+
+---------------------------------- Basic commands of Docker --------------------------------
+
+1.  docker images - shows all images on your machine.
+    docker rmi {image} - deletes the image.
+
+2.  docker ps - shows all conatiner you are running on you machine.
+
+3.  docker run -  lets you run a container
+    -p : lets you create a port Mapping
+    -d : lets you run it in detached mode. means it runs in Terminal background.
+
+    docker kill {containerID} - deletes the conatiner. 
+    
+4.  docker build - lets you build an image 
+    docker push - lets you push an image to registry.
+
+5. docker exec - used to run a command inside a running container. It allows you to execute additional processes or 
+interact with the container without stopping or restarting it.
+
+
+---------------------------------- Docker File ---------------------------------
+
+If you want to create an image from your own code, that you can push to dockerhub, you need to create a DockerFile
+for your application. 
+A Dockerfile is a text document that contains all the commands a user could call on the command line to create an 
+image.
+
+
+-- How to create an docker file:
+A docker file has 2 parts.
+1. Base image
+2. Bunch of commands that you run on the base image(to install dependencies like node.js)
+
+
+-------------------- Let's write our own DockerFile --------------------
+
+Let's try to containerize are app : https://github.com/100xdevs-cohort-2/week-15-live-1.git
+
+These must be written in "Dockerfile" file, check week-15-live-1 repo, for clean DockerFile. For explanation of 
+each line read below:
+```
+1. FROM node:20-alpine "Provide any base image, latest or any other, ubuntu,"
+
+2. WORKDIR /app  "To make sure all the commands need to run in this directory"
+
+3. COPY . .  "Copies files from the host system (your local machine) to the container. First Dot: Refers to the 
+            current directory on the host machine.Second Dot: Refers to the current working directory in the 
+            container (set by WORKDIR)."
+
+4.  RUN npm install  "Executes commands during the image build process."
+    RUN npm run build
+    RUN npx prisma generate 
+
+5. EXPOSE 3000 "tell dockerEngine that this will be the port the image will listen, write port acc to the code, as 
+    in index.ts the port listen to the 3000"
+
+6. CMD ["node", "dist/index.js"] - "Specifies the default command to run when the container starts. 
+
+    Important Notes:
+    Only one CMD instruction is allowed in a Dockerfile. If multiple CMD instructions are specified, only the last 
+    one is used.
+    It should not be used for build-time tasks (those should go into RUN).
+
+    ----- Why Are `CMD` and `RUN` Different? ----
+    1. RUN:
+    - Used during the **build process** of the image.
+    - Executes commands to prepare the image (e.g., installing dependencies, building the app).
+
+    2. CMD:
+    - Used at **runtime**, after the container starts.
+    - Specifies the command to execute **inside the running container**.
+
+7. ENV : used to set environment variables.
+```
+
+
+---- .DockerIgnore file -----
+
+```
+COPY . . 
+```
+
+this cmd copy all local repo to docker conatiner. including the node_modules, dist/, and other things
+
+to not include them, just write them inside .DockerIgnore
+
+
+
+---------------------- Creating Image of repo --------------------
+
+in terminal, i.e PS E:\Learning\W15 - Docker\15.1 - Docker Basics\week-15-live-1> 
+
+run command:
+```
+docker build -t any_name_for_the_image . 
+```
+
+1. -t : tag of image.
+2. should be unique name, if want to push it to dockerhub. use name "username/any_name_for_the_image" for uniqueness
+3. . : the dot at the end of command says where to build image from, if the current path is there then dot.
+    The dot specifies the build context, i.e., the directory where Docker looks for the Dockerfile and other necessary files to build the image.
+
+
+
+--- Now, it will create the image locally for the use of container. 
+
+you can seee it by "docker image". 
+and, you can run this image by command:
+```
+docker run -d -p 3000:3000 any_name_for_the_image
+```
+
+------------------ Passing in Environment variable ----------------------
+
+
+

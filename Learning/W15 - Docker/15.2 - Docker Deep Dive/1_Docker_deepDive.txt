@@ -1,0 +1,214 @@
+Layers in Docker.
+Networks and Volumes.
+
+
+----------------------------------- Layers in Docker ---------------------------------------
+
+
+In Docker, layers are fundamental part of the image architecture that allows docker to be efficent, fast, and 
+portable. A docker image is essentially built up from a series of layers, each representing a set of differences 
+from the previous layer.    
+
+
+How layers are made : 
+
+1. Base Layer: The starting point of image, typically an operating system like Ubuntu, Alpine or any other base 
+image specified in a DockerFile 
+
+2. Instruction Layers : Each command in a DockerFile creates a new layer in the image. These include Instruction
+like RUN, COPY, which modify the filesystem by installing packages, copying files from host to container, or other
+changes.
+
+3. Reusable & Sharable : Layers are cached and reusable across different imagess, which makes building and sharing
+images more efficent. If multiple images are built from the same base image or share common instruction, they can 
+reuse the same layers, reducing storage space and speeding up image downloads and builds. 
+
+4. Immutable : Once a layer is created, it cannot be changed. If a change is made, Docker creates a new layer that 
+captures the difference. This immutability is key to Docker's reliablity and performance, as unchanged layers can be
+shared acroos images and containers. 
+
+
+---------------------------- Layers Practically -----------------------------------
+
+```
+docker build -t image_name . 
+```
+
+```
+docker run -d -p 3000:3000 image_name 
+```
+
+
+During building image, the docker engine uses caching,  i.e it will take less time during buildign up, if it is 
+already done before. 
+The same layer can also be shared ACROSS IMAGES, and other image can also use caching.
+
+
+Our main goal is to maximize the DockerFile commands to keep it alwayes cached. 
+
+see this file:
+week15live1/
+
+```
+FROM node:20-alpine
+
+WORKDIR /app 
+
+COPY . . 
+
+RUN npm install  
+RUN npm run build
+RUN npx prisma generate 
+
+EXPOSE 3000 
+
+CMD ["node", "dist/index.js"]
+```
+
+     
+lets think:
+
+How often in a project do you think dependencies change?
+How often does the npm install layer needs to be changed?
+Wouldn't it be nice if we could cache the npm install step considering dependencies don't change often?
+
+
+Now optimised DockerFile:
+```
+FROM node:20-alpine
+
+WORKDIR /app 
+
+COPY package* . 
+COPY ./prisma . 
+
+RUN npm install 
+RUN npx prisma generate
+
+COPY . . 
+
+RUN npm run build
+
+EXPOSE 3000 
+
+CMD ["node", "dist/index.js"]
+```
+
+The only thing which changes very often is code. so better to keep it very last in comands.
+
+
+
+-------------------------------------- Networks and Volumes -----------------------------------------------------
+
+Networks and Volumes are concepts that become important when you have multiple containers running in which you
+1. Need to persist data across docker restarts - Volumes
+2. Need to allow container to talk each other - Networks
+
+--------------- Volumes -----------------
+
+If you restart a mongo docker container, you will notice that your data goes away. 
+This is because docker container are transitory (they don't retain data across restarts)
+
+
+-- steps
+
+1. Create a volume:
+```
+docker volume create name_of_volume
+```
+
+2. Mount the folder in mongo which actually store the data to this volume:
+```
+docker run -v name_of_volume:/data/db -p 27017:27017 mongo
+```
+
+3. Open mongocompass and add some data to it:
+
+4. now it you kill the container, still the data will be in volumne
+you can connect next container with that volume, data will be there.
+
+or if you stop/start container, the data still be there.
+
+
+
+---------- Networks ------------------
+
+
+In Docker, a network is a powerful feature  that allows container to communicate with each other and with the 
+outside world(host machine).
+
+Docker containers can't talk to each other by default.
+
+localhost on docker container means it's own network and not the nework of the host machine.
+
+
+--- How to make container talk to each other? 
+
+pre req: till now, we're running a container of mongo image, connected to the volume. 
+with cmd : PS E:\MERN LEARNING\Learning\W15 - Docker\15.2 - Docker Deep Dive\week-15-live-2.2> docker run -v mydb:/
+data/db -p 27017:27017 mongo
+
+now, 
+
+Attach them to same network.
+
+1. Build the image, and run container of it.
+
+```
+docker build -t image_name . 
+```
+
+```
+docker run image_name
+```
+
+{
+    Here, we're building the image of node.js app which uses mongoose.(week15live2.2)
+    see the src/db.ts , written some notes there:
+
+    from week15live2/src/db.ts
+    // const mongoUrl: string = 'mongodb://localhost:27017/myDatabase'; // this localhost won't work, because in
+    // this specific container, localhost:27017 isn't running anything, to connect with localhost:27017 of 
+    // different running container, we will use network.
+}
+
+    
+2. Create a network 
+```
+docker network create network_name
+```
+
+3. Start mongo container with the network attched to it.
+```
+docker run -d -v name_of_volume:/data/db --name name_of_this_container --network network_name -p 27017:27017 mongo
+```
+{ 
+    the name given here is imp. this name will be used in src/db.ts as connection string. 
+
+    from week15live2/src/db.ts:
+    // in network, when we create a mongo container which is connected to network, (read 1_Docker_deepDive.txt to 
+    do this.)   we name it something, that name is required here for connection string. 
+    // i gave the name as mongoContainer, hence using it here.
+    const mongoUrl: string = 'mongodb://mongoContainer:27017/myDatabase'; 
+
+}
+
+
+4. Start the backend process on the same network
+// rebuild the image, as the connectionstring got changed. then make container of it by below code.
+```
+docker run -d -p 3000:3000 --name name_of_this_container --network network_name image_name
+```
+
+
+now, you'll have a running container of mongo image, named as mongoContainer. 
+
+then, you'll have a image of week15live2. where connectionstring has mongoContainer as name.
+then, you'll have a container of this image of week15live2.
+
+both container are connected to same network, and working well.
+
+----------------------------------------------------------------------------
+
+
+

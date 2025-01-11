@@ -55,7 +55,7 @@ them.
 
 That is mostly true today.
 
-Most projects that you open on Github will/should have docker files in them(away to create docker conatiner)
+Most projects that you open on Github will/should have docker files in them(away to create docker container)
 
 ----- Docker installing ------
 
@@ -103,7 +103,7 @@ its dependencies, running in an isolated environment.
 docker run -d -p 27018:27017 mongo
 ```
 
-Means, any req comes with port 27018 on my main machine, will be transferred to 27017 on mongo conatiner.
+Means, any req comes with port 27018 on my main machine, will be transferred to 27017 on mongo container.
 
 You can change host port : 27018 to any port, 
 but can't change mongo port 27017 because it is default port of mongo.
@@ -115,19 +115,25 @@ unless you have reconfigured MongoDB inside the container to listen on a differe
 1.  docker images - shows all images on your machine.
     docker rmi {image} - deletes the image.
 
-2.  docker ps - shows all conatiner you are running on you machine.
+2.  docker ps - shows all container you are running on you machine.
 
 3.  docker run -  lets you run a container
     -p : lets you create a port Mapping
     -d : lets you run it in detached mode. means it runs in Terminal background.
 
-    docker kill {containerID} - deletes the conatiner. 
+    docker kill {containerID} - deletes the container. 
     
 4.  docker build - lets you build an image 
     docker push - lets you push an image to registry.
 
-5. docker exec - used to run a command inside a running container. It allows you to execute additional processes or 
-interact with the container without stopping or restarting it.
+5.  docker exec - used to run a command inside a running container. It allows you to execute additional processes
+    or interact with the container without stopping or restarting it.
+    
+    docker exec -it <conatiner_name_or_id> /bin/bash => open terminal of conatiner, where you can run multiple cmds.
+    docker exec <conatiner_name_or_id> ls  => just shows the files in dir
+
+
+    
 
 
 ---------------------------------- Docker File ---------------------------------
@@ -192,7 +198,7 @@ each line read below:
 COPY . . 
 ```
 
-this cmd copy all local repo to docker conatiner. including the node_modules, dist/, and other things
+this cmd copy all local repo to docker container. including the node_modules, dist/, and other things
 
 to not include them, just write them inside .DockerIgnore
 
@@ -219,10 +225,20 @@ docker build -t any_name_for_the_image .
 you can seee it by "docker image". 
 and, you can run this image by command:
 ```
-docker run -d -p 3000:3000 any_name_for_the_image
+docker run -d -p 3000:3000 name_of_image
 ```
 
 ------------------ Passing in Environment variable ----------------------
 
 
+If your codebase/image has any environment variable to be passed, we pass them while creating the container.
 
+```
+docker run -d -p 3000:3000 -e DATABASE_URL="your-url-value" name_of_image
+```
+
+
+
+---------------- Pushing the image to docekrhub --------------------
+
+You can also push them at dockerhub, if needed.

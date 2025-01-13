@@ -1,0 +1,12 @@
+Initialize monorepo
+
+
+
+-------------------------------- lets Initialize a monorepo --------------------------------
+
+1. Initialize:
+```
+npx create-turbo@latest
+```
+
+2. select "npm workspaces" as framework.

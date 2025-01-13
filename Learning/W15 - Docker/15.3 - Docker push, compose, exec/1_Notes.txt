@@ -1,0 +1,148 @@
+Commands. 
+Pushing Image to dockerhub. 
+Docker Compose. 
+
+
+----------------------------------------- Commands --------------------------------------------
+
+1. docker kill - to kill a container
+2. docker rmi - to remove images
+
+3. docker exec 
+```
+docker exec -it <container_name_or_id> /bin/bash =>  open terminal of conatiner, where you can run multiple cmds.
+
+docker exec <container_name_or_id> ls  => shows this files in dir
+```
+
+ 
+--------------------------------------- Pushing Image to dockerhub ---------------------------
+
+1. Login at hub.docker.com , then repository, create repo. Give name or repo and create it. i gave it name "test"
+
+2. Build the any image:
+```
+docker build -t container_name .
+```
+- docker build -t backend
+
+3. Login in terminal
+```
+docker login 
+```
+
+4. Tag the container with repository. 
+```
+ docker tag <container_name>:<tag> <username>/<repository_name>:<tag>
+```
+- docker tag backend:latest potenz/test:latest
+
+3. push the image. 
+
+```
+docker push <username>/<repository_name>:<tag>
+```
+- docker push potenz/test:latest
+
+
+--------------------------------------- Docker Compose ---------------------------------------------------
+
+Docker Compose is a tool designed to help you define and run multi-container Docke Application. With Compose, you 
+use a YAML file to configure your application's services, networks, and volumes. Then, with a single command, you 
+can create and start all the services from your configuration.
+
+
+--- Before docker compose, to run a our week-15-live-2.2 
+
+1. Create network:
+docker network create network_name
+
+2. Create Volume:
+docker volume create volume_name
+
+3. Start mongo container:
+docker run -d -v volume_name:/data/db --name mongo --network network_name -p 27017:27017 mongo 
+
+4. Start backend container:
+docker run -d -p 3000:3000 --name backend --network network_name backend
+
+
+-- With Docker Compose.
+
+Create docker-compose.yaml file. 
+
+add this:
+```
+version: "3.3"
+services:
+  mongodb:
+    image: mongo
+    container_name : mongodb_container
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+  
+  backend:
+    image: backend
+    container_name: backend_app
+    depends_on:
+      - mongodb
+    ports:
+      - 3000:3000
+    environment:
+      MONGO_URL: "mongodb://mongodb_container:27017"
+
+volumes:
+  mongodb_data:
+```
+
+
+1. the mongodb in services represent this line:
+```
+docker run --name mongodb_container -p 27017:27017 -v mongodb_data:/data/db mongo
+```
+
+2. the backend in services represent this line:
+```
+docker run --name backend_app -p 3000:3000 -e MONGO_URL="mongodb://mongodb_container" backend
+```
+
+3. the volume line:
+```
+docker volume create mongodb_data
+```
+
+4. we didn't write anything for network, so here, all the services written are already connected to same network.
+no no need here.
+
+
+
+---
+```
+backend:
+    image: backend
+    container_name: backend_app
+```
+
+instead of giving image, we can build the image as well. 
+```
+backend:
+    build : .
+    container_name: backend_app
+```
+
+the dot refers to the current workign dir's DockerFile.
+
+
+
+
+-----------------  Now, to use this docker-compose, -----------------------------
+
+Install, docker-compose . if not. 
+
+basic commands:
+
+1. docker-compose up 
+
+2. docker-compose down --volumes

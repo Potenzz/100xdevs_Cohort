@@ -1,0 +1,147 @@
+My notes.
+gpt notes.
+
+
+----------------------------- My notes regarging this ----------------------------------
+
+Generally, do mount directory of host machine to the container. we use bind mount. 
+so any changes in files in host machine, would reflect the same in container. 
+
+cmds:
+
+1. build the nextapp: i.e 15.4/my-app 
+```
+docker build -t nextapp . 
+```
+
+2. run container, and mount path.
+```
+docker run -d -p 3000:3000 -v ./app:/nextapp/app nextapp
+```
+
+./app is the 15.4/myapp/app directory.
+
+/nextapp/app is dir we created on container. with Dockerfile.(WORKDIR /nextapp), the app folder inside it already
+done while (COPY . . ) this cmd.
+
+
+
+3. now, if any file is changed in ./app folder in my machine, will be reflected in container as well.
+and without restarting it will reflect those changes in case of nextapp.
+
+thats'it
+
+
+------------------------------------
+however, with above commands, this didnt' work, but with below it worked, 
+
+1. change the next.config.ts
+```
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  webpackDevMiddleware: (config) => {
+    config.watchOptions = {
+      poll: 800, // Polling interval (ms)
+      aggregateTimeout: 300, // Time to wait before rebuilding after a change (ms)
+    };
+    return config;
+  },
+};
+
+export default nextConfig;
+```
+
+2. build it again.
+
+
+3. docker run -d -p 3000:3000 -v "$(Get-Location)\app:/nextapp/app" nextapp
+
+
+
+
+
+
+
+-------------------------- Bind Mount (written by gpt)---------------------------------
+
+In Docker, **bind mounts** are a way to share a file or directory between the host system and a container. They 
+allow you to mount a specific location on your host machine into a specific location in the container, providing a 
+direct link between the two file systems.
+
+-- How Bind Mounts Work
+A **bind mount** maps a directory or file from the host machine (outside Docker) to a directory or file in the 
+container.
+Changes made in the mounted directory or file are reflected in both the host and the container.
+Unlike Docker volumes, bind mounts rely on the host machine’s file structure and can access any file or directory 
+on the host.
+
+-- Syntax for Bind Mounts
+When creating a container, you specify a bind mount with the `-v` or `--mount` flag.
+
+-- Using `-v` flag (simpler but less flexible)
+```
+docker run -v /path/on/host:/path/in/container my-image
+```
+- `/path/on/host`: Path to the directory or file on the host.
+- `/path/in/container`: Path where the host directory/file will be accessible inside the container.
+
+--- Using `--mount` flag (more verbose but flexible)
+```
+docker run --mount type=bind,source=/path/on/host,target=/path/in/container my-image
+```
+- `type=bind`: Specifies a bind mount.
+- `source`: Path on the host machine.
+- `target`: Path inside the container.
+
+--- Key Features of Bind Mounts
+1. **Direct Access to Host Files**  
+   - Allows the container to directly access files on the host system.
+   - Example: Sharing a source code directory between the host and a development container.
+
+2. **Bidirectional Changes**  
+   - Changes in the host files are visible in the container, and changes made in the container are reflected on the host.
+
+3. **Performance**  
+   - Bind mounts are faster because they directly link host and container file systems.
+
+--- Use Cases
+1. **Development Environments**:  
+   Mount source code from the host machine into a container to allow live editing of code.
+   ```
+   docker run -v $(pwd):/app -w /app node npm start
+   ```
+
+2. **Configuration Sharing**:  
+   Share configuration files (e.g., `/etc/config`) between the host and container.
+
+3. **Logging**:  
+   Write container logs directly to a file or directory on the host.
+
+4. **Accessing Persistent Data**:  
+   Access existing data stored on the host directly from the container.
+
+--- Bind Mounts vs Docker Volumes
+| **Feature**           | **Bind Mounts**                                      | **Docker Volumes**                                  |
+|------------------------|-----------------------------------------------------|----------------------------------------------------|
+| **Location**           | Anywhere on the host file system                    | Managed by Docker, stored in `/var/lib/docker/volumes` |
+| **Management**         | Requires manual setup and maintenance               | Managed automatically by Docker                    |
+| **Flexibility**        | Highly flexible, can access any part of the host FS | Restricted to Docker-managed volumes               |
+| **Performance**        | Slightly faster for direct access                   | Optimized for Docker use cases                     |
+
+--- Example: Web Development with Bind Mount
+Host has web files in `/my-app`. You want the container to serve those files:
+```
+docker run -d -p 8080:80 -v /my-app:/usr/share/nginx/html nginx
+```
+- Files from `/my-app` on the host are served by the Nginx container.
+
+
+
+----------------------
+
+
+
+
+
+

@@ -10,3 +10,26 @@ npx create-turbo@latest
 ```
 
 2. select "npm workspaces" as framework.
+
+
+3. Folder Structure
+
+    There are 5 modules in our project.
+
+    End user apps (website/core backend)
+    1. apps/web - next.js website
+    2. apps/docs - a docs website that has all the documentation related to your project.
+
+    Helper Packages
+    3. packages/ui - ui packages
+    4. packages/typescript-config - sharable ts configuration
+    5. packages/eslint-config - sharable eslint configuration
+
+
+4. npm run dev:
+- if you see the top level package.json, you'll see npm run dev, means "turbo dev". means turbo runs each app and 
+common by its own. as we know. 
+
+5. packages/ui : its package.json exports some components, which app can use further. 
+
+6. apps/web : its package.json , have dependencies repo/ui. to make sure it imports them nicely.

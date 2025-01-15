@@ -1,0 +1,120 @@
+
+Authentication.
+Authentication with jwt.
+Authentication using Cookies.
+CSRF attacks.
+SameSite Attribute.
+Using Cookies.
+
+-------------------------------- Authentication ---------------------------------
+It is the process of letting users signup/signin into websites via username/password or usign SSO (Single sign on)
+
+
+------------------------------- Authentication with jwt + localStorage -----------
+
+We've done auth wih jwt(json web tokens). 
+
+Overview:
+
+During signin, server creates a jwt and sends to browser, which browser stores at localStorage. 
+and whenever user hit any endpoints, this jwt is used by browser to verify the users identity by server.
+
+
+------------------------------- Authentication using Cookies ----------------------------------------
+
+----------- What are cookies ------------
+
+Cookies in web development are small pieces of data sent from a website and stored on the user's computer by the 
+user's web browser while the user is browsing. They are designed to be reliable mechanism for websites to remember 
+things (very similare to localStorage).
+
+1. Session Management - Cookies allow websites to identify users and track thier individual session states across 
+multiple pages or visits. 
+2. Personalization - Websites uses cookies for personalized content and ads. 
+3. Tracking - Cookies can track users across websites. used for ananytics purpose, advistising targetting and 
+websites functionality. 
+4. Security : Secure cookies can be used to enhance the security of website ensuring that the transmission of 
+information is only done over encrypted connection. 
+
+We'll be focusing on point 4. i.e Security.
+
+
+--------- Why not localStorage? ---------------------
+
+Cookies and localStorage both provides way to store data on the client-side, but they serve different purposes and 
+have different characteristics. 
+
+1. Cookies are send with every request to the website (by the browser)(you don't have to explicitly add a header to
+the fetch call).
+This point becomes super imp for Next.js , we'll see it soon.
+
+2. Cookies can have expiry attached to them
+3. Cookies can be restricted to only https and to certain domains.
+
+
+-------- Properties of cookies -----------------
+
+Types of cookies:
+1. Persistent : Stay even if you close the window.
+2. Session : Go away when you close the window.
+3. Secure : Sent only over secure, encrypted connections (HTTPS).
+
+
+Properties of cookies:
+-> HttpOnly - Can not be accessed by client side scripts.
+-> SameSite - Ensures cookies are not send on cross origin requests.
+    1. Strict.
+    2. Lax - Only GET requests and on "top level navigation"
+    3. None
+-> Domains - You can also specify what all domains should the cookie be sent from. 
+
+
+
+--------- CSRF Attacks ---------------------
+
+Cross site request forgery attacks were super common because of cookies hence the SameSite Attribute was introduced.
+
+Attack in detail:
+    CSRF attacks occur when a malicious website tricks a user into performing an unwanted action on a different 
+    website where they are authenticated (e.g., making a purchase, changing account settings, etc.).
+
+    How CSRF works:
+
+    1. The attacker creates a malicious website that includes a hidden request (like a form submission or AJAX 
+    request) targeting a site where the victim is logged in.
+    2. The victim visits the malicious website.
+    3. Since the victim is already authenticated (via cookies or session), their browser sends the request to the 
+    target site as if it were legitimate.
+    4. The target site processes the request, and the victim's action is executed without their knowledge.
+
+
+Let's see a few cases of SameSite (i.e solution for CSRF attacks.):
+
+1.-------- None :
+
+App.com ----> cookies goes ---> api.com
+malacious.com ---> cookies goes ----> api.com  (which shouldnt be done)
+
+2.-------- Strict:
+
+App.com ----> cookies goes ---> api.com
+malacious.com ---> cookies does not go ----> api.com 
+
+but, 
+
+App.com ----> cookies goes ---> api.com
+malacious.com--> has button to redirect App.com ---> still cookies does not go ----> api.com (which should go.)
+
+so to solve this, we got Lax.
+
+3.--------Lax , it is the default case as well.
+Only GET requests and on "top level navigation"
+
+App.com ----> cookies goes ---> api.com
+malacious.com--> has button to redirect App.com ---> cookies goes ----> api.com
+malacious.com ---> cookies does not go ----> api.com 
+
+
+----------------------- Using Cookies (in Express , backend) --------------------------
+
+See the file, week-16/backend/src/index.ts. 

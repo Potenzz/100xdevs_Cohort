@@ -1,0 +1,209 @@
+Exploring packages/ui.
+Exploring turbo.json.
+Adding React application.
+
+
+------------------------------------------- packages/ui -------------------------------------------------
+
+first approach:
+
+1. you need to create component in packages/ui/src 
+2. then you need to add that component in packages/package.json 
+as:
+```
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./admin": "./src/admin.tsx" // here, you'll need to add
+  },
+```
+
+
+second approach:
+use command:
+```
+\my-turborepo\packages\ui> npm run generate:component
+```
+
+just give the name of component, and it will add that in package.json
+
+
+
+---------------------------------------- my-turborepo/turbo.json ----------------------------------------
+```
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"], // turbo searches for "build" script in each application
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"] // it will build in .next folder, and not include caches folder
+it. will have to change this if we work on different framworks, nodejs reactjs...
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+    "dev": {
+      "cache": false, // no need caching in dev mode.
+      "persistent": true // ensures no apps depends on other app in dev mode.
+    }
+    "deploy" : will have to add this part of code, if needs to deploy them
+  }
+}
+```
+
+------------------------------ Adding React App in turborepo ------------------------
+
+1. cd apps.
+2. npm create vite@latest
+3. update its package.json . "@repo/ui":"*",
+```
+"dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@repo/ui":"*"
+  },
+```
+
+4. run npm install in root folder.
+5. npm run dev
+
+
+-------------------------------- Adding nodejs app in turborepo -------------------------
+
+1. cd apps/backend   i.e. i gave folder name as backend.
+2. npm init -y
+3. npx tsc --init 
+
+it will create tsconfig.json. 
+however the most of the base tsconfig is already wriiten in packages/typescript-config folder. 
+in each application you just need to extends them, and add few things on top of it. 
+
+to know which to add, visit turborepo site, and see example related to frameworks.
+
+like for nodejs, i found this in kitchensink/apps/api/tsconfig.json:
+
+```
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2015"],
+    "outDir": "./dist"
+  },
+  "exclude": ["node_modules"],
+  "include": ["."]
+}
+```
+just replace this with existing tsconfig.
+
+
+4. now add index.js, and write code there. 
+
+5. now, modify package.json:
+
+```
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {                 // add below scripts,, 
+    "build":"tsc -b",
+    "dev" : "tsc -b && node dist/index.js"
+  },
+```
+
+6. now you're good to go. 
+
+
+
+-------------------------------- Adding Common package in packages folder. --------------------------------
+
+1. create packages/common i.e. i gave folder name as common.
+```npm init -y && npx tsc --init```
+2. in src/index.ts - write code .
+3. add tsconfig.json: however no need of this file here, but still.
+```
+{
+  "extends":"@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir":"./dist",
+    "rootDir":"./src"
+  },
+  "exclude": ["node_modules"],
+  "include": ["src"]
+}
+```
+4. in package.json, follow below practice.
+```
+  "name": "@repo/common",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "exports":{   
+    "./config":"./src/index.ts"   //this is what we export, and import finally.
+  },
+  "dependencies": {
+    "@repo/common":"*"
+  },
+```
+
+4. run npm install, in global level, ie. my-turborepo. 
+
+5. Now, import this in backend app.
+```
+import {BACKEND_URL } from "@repo/common/config";
+console.log(BACKEND_URL);
+```
+
+
+6. Now try to run , npm run dev i.e. tsx -b && node dist/index.js
+
+you'll seee this error:
+```
+PS E:\MERN LEARNING\Learning\W16 - Monorepo,  Authentication\16.2 - Monorepos deepdive\my-turborepo\apps\backend> npm run dev      
+
+> backend@1.0.0 dev
+> tsc -b && node dist/index.js
+
+E:\MERN LEARNING\Learning\W16 - Monorepo,  Authentication\16.2 - Monorepos deepdive\my-turborepo\packages\common\src\index.ts:1
+export const BACKEND_URL = "just any random example, which needs to shared in both FE and BE"
+^^^^^^
+
+SyntaxError: Unexpected token 'export'
+    at internalCompileFunction (node:internal/vm:77:18)
+    at wrapSafe (node:internal/modules/cjs/loader:1288:20)
+    at Module._compile (node:internal/modules/cjs/loader:1340:27)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1435:10)
+    at Module.load (node:internal/modules/cjs/loader:1207:32)
+    at Module._load (node:internal/modules/cjs/loader:1023:12)
+    at Module.require (node:internal/modules/cjs/loader:1235:19)
+    at require (node:internal/modules/helpers:176:18)
+    at Object.<anonymous> (E:\MERN LEARNING\Learning\W16 - Monorepo,  Authentication\16.2 - Monorepos deepdive\my-turborepo\apps\backend\dist\index.js:7:18)
+    at Module._compile (node:internal/modules/cjs/loader:1376:14)
+
+Node.js v20.11.1
+npm ERR! Lifecycle script `dev` failed with error: 
+npm ERR! Error: command failed
+npm ERR!   in workspace: backend@1.0.0 
+```
+
+
+7. to fix this you need to run it with diffrent bundler for typescript. here we're using "esbuild", 
+
+```
+npm install esbuild
+```
+
+```
+npx esbuild ./src/index.ts --bundle --platform=node --outfile=dist/index.js
+```
+
+you can also use "tsup" bundler.
+
+8. now run again, node ./dist/index.js
+it will import values.

@@ -1,0 +1,72 @@
+
+------------- To customize your own signin page ----------
+
+
+1. create app/signin/page.tsx:
+its code:
+
+```
+
+```
+
+2. add this code to authOption:
+pages:{
+        signIn:"/signin"
+    }
+
+fullcode app/lib/auth.ts:
+```
+import CredentialsProvider from "next-auth/providers/credentials"
+import { JWT } from "next-auth/jwt";
+import { AdapterUser } from "next-auth/adapters";
+import GoogleProvider from "next-auth/providers/google";
+import GitHubProvider from "next-auth/providers/github";
+import page from "../user/page";
+import { signIn } from "next-auth/react";
+
+
+export const NEXTAUTH = {
+    providers: [
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                username: { label: "Username", type: "text", placeholder: "jsmith" },
+                password: { label: "Password", type: "password", placeholder:"Password" }
+            },
+            async authorize(credentials, req) {
+                return {
+                    id:"1",
+                    name:"Vishnu"
+                }
+            }
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || ""
+          }),
+        GitHubProvider({
+            clientId: process.env.GITHUB_ID || "",
+            clientSecret: process.env.GITHUB_SECRET || ""
+          })
+    ],
+    secret:process.env.NEXTAUTH_SECRET,
+    callbacks:{
+        async session({
+            session,token,user,
+          }: {
+            session: any;token: JWT;user: AdapterUser & { id: string }; 
+          }){
+            console.log(session)
+            if (session.user) {
+              session.user.id = token.sub ?? user.id; 
+            }
+            console.log(session)
+            return session;
+          }
+    },
+    pages:{
+        signIn:"/signin"
+    }
+}
+
+```

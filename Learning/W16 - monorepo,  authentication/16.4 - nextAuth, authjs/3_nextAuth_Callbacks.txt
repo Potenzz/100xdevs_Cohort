@@ -1,0 +1,265 @@
+
+
+--- Here, using getServerSession and useSession, both does not show id. to use them we'll use Callback -----
+
+
+Callbacks are asynchronous functions you can use to control what happens when an action is performed.
+
+
+Callbacks in nextauth.
+```
+...
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      return true
+    },
+    async redirect({ url, baseUrl }) {
+      return baseUrl
+    },
+    async session({ session, user, token }) {
+      return session
+    },
+    async jwt({ token, user, account, profile, isNewUser }) {
+      return token
+    }
+...
+}
+```
+
+
+
+1. ------------------ Signin Callback ----------------------------
+```
+...
+callbacks: {
+  async signIn({ user, account, profile, email, credentials }) {
+    const isAllowedToSignIn = true
+    if (isAllowedToSignIn) {
+      return true
+    } else {
+      // Return false to display a default error message
+      return false
+      // Or you can return a URL to redirect to:
+      // return '/unauthorized'
+    }
+  }
+}
+...
+```
+
+
+
+2 -------------------------- JwtCallback ----------------------------------
+
+Here, you can see the userId in token.sub . and return 
+```
+...
+callbacks: {
+  async jwt({ token, account, profile }) {
+    // Persist the OAuth access_token and or the user id to the token right after signin
+    if (account) {
+      token.accessToken = account.access_token
+      token.id = profile.id
+    }
+    return token
+  }
+}
+...
+```
+
+
+3. ---------------------------- Session Callback -----------------------------------
+
+```
+...
+callbacks: {
+  async session({ session, token, user }) {
+    // Send properties to the client, like an access_token and user id from a provider.
+    session.accessToken = token.accessToken
+    session.user.id = token.id
+    
+    return session
+  }
+}
+...
+```
+
+
+
+4 ------------------- The code ------------------
+```
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials"
+import { Session } from "next-auth";
+import { JWT } from "next-auth/jwt";
+import { AdapterUser } from "next-auth/adapters";
+
+const handler = NextAuth({
+    providers: [
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                username: { label: "Username", type: "text", placeholder: "jsmith" },
+                password: { label: "Password", type: "password", placeholder:"Password" }
+            },
+            async authorize(credentials, req) {
+                return {
+                    id:"1",
+                    name:"Vishnu"
+                }
+            }
+        })
+    ],
+    secret:process.env.NEXTAUTH_SECRET,
+    callbacks:{
+        async jwt({token, user}){
+            // console.log(token);
+            token.userId = token.sub;
+            return token
+        },
+        async session({
+            session,token,user,
+          }: {
+            session: any;token: JWT;user: AdapterUser & { id: string }; 
+          }){
+            console.log(session)
+            if (session.user) {
+              session.user.id = token.sub ?? user.id; 
+            }
+            console.log(session)
+            return session;
+          }
+    }
+});
+
+
+export { handler as GET, handler as POST }
+```
+
+
+Here, this will now return userId in client-side component, i.e Appbar.tsx
+
+But, what for server-side components i.e. user/page.tsx?? 
+
+see the Code of both files first:
+
+-Appbar
+```
+"use client"
+
+import { signIn, signOut, useSession } from "next-auth/react"
+
+export const Appbar = () => {
+    const session = useSession();
+    return <div className="flex justify-between">
+        <button onClick={()=> {
+            signIn();
+        }}>
+            Signin
+        </button>
+
+        <button onClick={()=>{
+            signOut();
+        }}>
+            Logout
+        </button> 
+
+        <div>{JSON.stringify(session)}</div>
+    </div>
+}
+```
+
+-User/page.tsx
+```
+import { Appbar } from "@/components/Appbar";
+import { getServerSession } from "next-auth";
+
+export default async function (){
+    const session = await getServerSession();
+    return <div>
+        <Appbar/>
+
+        User Component 
+
+        {JSON.stringify(session)}
+    </div>
+}
+```
+
+
+-- Now, to get the userId in server-side component, we need to provide getServerSession the authOptions. i.e. 
+
+Put the nextAuth code in separate file, ie.. app/lib/auth.ts
+its code:
+```
+import CredentialsProvider from "next-auth/providers/credentials"
+import { JWT } from "next-auth/jwt";
+import { AdapterUser } from "next-auth/adapters";
+
+
+export const NEXTAUTH = {
+    providers: [
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                username: { label: "Username", type: "text", placeholder: "jsmith" },
+                password: { label: "Password", type: "password", placeholder:"Password" }
+            },
+            async authorize(credentials, req) {
+                return {
+                    id:"1",
+                    name:"Vishnu"
+                }
+            }
+        })
+    ],
+    secret:process.env.NEXTAUTH_SECRET,
+    callbacks:{
+        async session({
+            session,token,user,
+          }: {
+            session: any;token: JWT;user: AdapterUser & { id: string }; 
+          }){
+            console.log(session)
+            if (session.user) {
+              session.user.id = token.sub ?? user.id; 
+            }
+            console.log(session)
+            return session;
+          }
+    }
+}
+```
+
+the api/auth/[..nextauth]/Route.ts:
+```
+import { NEXTAUTH } from "@/app/lib/auth";
+import NextAuth from "next-auth";
+
+const handler = NextAuth(NEXTAUTH);
+
+export { handler as GET, handler as POST }
+```
+
+
+now, to see get the userId in server-side component, provide this authOptions to getServerSession
+i.e. the user/page.tsx:
+```
+import { Appbar } from "@/components/Appbar";
+import { getServerSession } from "next-auth";
+import { NEXTAUTH } from "../lib/auth";
+
+export default async function (){
+    const session = await getServerSession(NEXTAUTH);
+    return <div>
+        <Appbar/>
+
+        User Component 
+
+        {JSON.stringify(session)}
+    </div>
+}
+```
+
+
+now, it will show the userId i.e sensiive or additional info to serverside component.

@@ -1,0 +1,94 @@
+NextAuth. 
+Catch all Routes. 
+Credentials Provider.
+
+
+
+------------------------------------------------- NextAuth --------------------------------------------------------
+NextAuth is a library that lets you do authentication in Nextjs. 
+
+Can we do it without NextAuth ? -- Yes, 
+Should we? -- Probably not.
+
+Popular choices while doing auth include. 
+
+1. External provider -  they're expensive.
+    1. https://auth0.com/
+    2. https://clerk.com/
+    3. Firebase auth. 
+
+2. Inhouse using cookies.
+3. NextAuth 
+
+
+------------- NextAuth -------------
+
+1. It supports various providers:
+    1. Login with email
+    2. Login with google
+    3. Login with facebook
+    ...
+
+
+
+---------------------------------- Catch All Routes. -----------------------------------------
+
+If you want to add a single route handler for 
+1. /api/auth/user
+2. /api/auth/random
+3. /api/auth/123
+4. /api/auth/...
+
+
+You can create a catch all route.
+
+
+1. create a nextjs app:
+```
+npx create-next-app@latest
+```
+
+2. create app/api/auth/[...nextauth]/route.ts
+
+now this route.ts will catch all routes, starts from /api/auth/...
+but, won't catch /api/auth  you need to add another Route.ts in that folder for that.
+
+
+in route.ts:
+
+```
+
+// Here i'm writing just differenct ways to get params, and exploring typescript types. not much related to auth.
+// just for coding, types. 
+
+// 1
+// export function GET(req:NextRequest, params:any){
+//     console.log(params);
+
+//     return NextResponse.json({
+//         msg:"this is auth route"
+//     })
+// }
+
+
+// 2
+// export async function GET(req:NextRequest, { params }:{ params: {authRoutes:string[]}}){
+//     const paramsValue = await params;
+//     console.log(paramsValue.authRoutes);
+    
+//     return NextResponse.json({
+//         msg:"this is auth route"
+//     })
+// }
+
+// 3 
+// export async function GET(req: NextRequest, context: { params: { authRoutes: string[] } }) {
+//     const params = await context.params;
+//     console.log('authRoutes:', params.authRoutes); 
+  
+//     return NextResponse.json({
+//       msg: "This is an auth route",
+//     });
+//   }
+
+```

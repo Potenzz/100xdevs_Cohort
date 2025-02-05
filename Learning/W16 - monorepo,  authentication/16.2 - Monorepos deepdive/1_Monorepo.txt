@@ -28,6 +28,9 @@ use command:
 
 just give the name of component, and it will add that in package.json
 
+If not work, then make sure you have folder turbo/geneators, 
+and copy react-component files from turborepo github example.
+
 
 
 ---------------------------------------- my-turborepo/turbo.json ----------------------------------------

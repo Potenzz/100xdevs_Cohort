@@ -1,0 +1,35 @@
+We're building a project here from scratch 
+Its link : https://github.com/Potenzz/paytm-100xdevs
+
+------------------------- things to keep in mind when create a new project -------------------
+
+
+1. Where to start - Feature planning.
+
+2. Design UI/UX:
+    1. UX : First Principles/copy the biggest website out there.
+    2. UI : Designer, today there are tools but haven't found any good one.
+
+3. High level Design:
+    1. Auth Provider.
+    2. Database
+    3. Backend stack.
+    4. Frontend stack.
+    5. Modules you'll have (common/ui/backend)
+    6. Cloud to deploy to 
+
+4. Low level Design (LLD):
+    1. Schema
+    2. Route Signatures
+    3. Frontend Components - debatable.
+
+5. ER Diagrams - 
+    1.We can build these today, but usually not needed unless you're a very visual person.
+
+6. How to think about feature:
+    1. usually come from product
+    2. If you're a founder, then just think whatever is right.
+
+7. How much complexity is needed:
+    1. Depends on the size of the company, For a startup, whatever helps you move fast who tech debt. For a 
+    company there are lot of layers of reviews to go through.

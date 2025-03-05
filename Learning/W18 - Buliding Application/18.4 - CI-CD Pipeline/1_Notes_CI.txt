@@ -1,0 +1,185 @@
+
+
+---------------------- What is CI and CD ? -------------------------
+
+Continuous Integration - It is a development practice where developers frequently integrates their code 
+changes into a shared repository, preferably several times a day. Each integration is automatically 
+verified by:
+1. Building the project
+2. Running automated tests. 
+
+This process allows team to detect problems early, improve software quality and reduce the time it takes to 
+validate and release new software updates. 
+
+
+Continuous Deployment - As the name suggests, deploying your code continuosly to various enviromnets. 
+(dev/stage/prod)
+
+
+--------------------- Continuous Deployment in Github --------------------
+
+We'll be deploying a next.js app to EC2 servers via docker 
+
+--- you don't need docker here, since it's deploying on simple EC2 server. 
+but if you deploy to 
+1. GCP App server
+2. ECS
+3. Kubernetes
+then it makes more sense to deploy a dockerised app.
+
+
+---------- architecture -------------
+
+new commit -> github -> 
+github starts its own machine which clone repo, dockerise it, push to dockerhub and push to EC2. -> 
+
+
+-------- Monorepo we'll be dealing in this case -------------
+
+this app: https://github.com/Potenzz/paytm-100xdevs
+
+it has 3 apps inside. 
+
+1. bank-webhook
+2. merchant-app
+3. user-app
+
+
+we'll be deploying all three to the same ec2 instance.
+
+----------------------- How to create a CI/CD Pipeline ---------------
+
+For github, you call add all your practice to .github/workflows
+
+for eg. https://github.com/code100x/cms/blob/main/.github/workflows/lint.yml
+
+```
+name: Linting and formatting on PR
+on:
+  pull_request:         // anytime a PR comes on any branch run the following job.
+    branches:           //
+      - '**'            // 
+
+jobs:
+
+  Continuous-Integration: // name of the job
+ 
+    name: Performs linting, formatting on the application  // name of the job machine to run the job on 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Repository       // Clone the repo on the machine
+        uses: actions/checkout@v3           //
+
+      - name: Setup pnpm                    // install Dependencies
+        run: npm install -g pnpm
+        
+      - name: Install Dependencies 
+        run: pnpm install
+
+      - name: Run linting check             // runs lint checks, if it fails the workflows stops
+        run: pnpm run lint:check
+
+      - name: Check formatting
+        run: pnpm run format:check
+```
+
+
+----------- Lets add a build pipeline for our repo -------------
+
+Anytime a user creates a PR, we need to run npm run build and only if it succeeds should the workflow suceed.
+
+
+- add .github/workflows/build.yml in the root folder.
+
+- create the workflow:
+
+```
+name: Build on PR
+
+on: 
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Use node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Init prisma
+        run: npm run db:generate
+
+      - name: Run build
+        run: npm run build
+```
+
+
+- push this to master branch
+- creates a new branch with some minimal changes and create a PR from it.
+- you should see the workflow run
+
+--------------- to test the workflow ------------
+```
+$ git checkout -b ci-branch
+
+//make any change in file
+$ git add . 
+$ git commit -m "new"
+
+$ git push origin ci-branch
+
+//now compare and make PR on github via gui.
+// check actions tab, and see the action.
+
+
+---------------- Now to avoid spams pr, make the workflow strict ------------
+
+```
+name: Build on PR
+
+on: 
+  workflow_dispatch: 
+  
+  pull_request:
+    branches:
+      - main
+    
+    types: [labeled]
+
+jobs:
+  build:
+    if: github.event.label.name == 'run-build'  # Run only if 'run-build' label is added
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Use node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Init prisma
+        run: npm run db:generate
+
+      - name: Run build
+        run: npm run build
+```
+
+now, this will only run on any new pr, when it is labelled as "run-build" 
+or with "workflow_dispatch" button in action tab.
+
+- create new label named as "run-build" and then label any pr with this. 

@@ -1,0 +1,207 @@
+
+
+Lets do Continuous Deployment step.
+
+
+------- 1. Create image of application -------------------
+
+- Create a dockerfile for the apps you have.
+
+-- Create docker/Dockerfile.user 
+```
+FROM node:20.12.0-alpine3.19    
+
+WORKDIR /usr/src/app
+
+COPY package.json package-lock.json turbo.json tsconfig.json ./
+
+COPY apps ./apps
+COPY packages ./packages
+
+#install dependencies
+RUN npm install
+RUN npm run db:generate
+
+RUN npm run build
+
+
+CMD ["npm", "run", "start-user-app"]
+```
+
+
+-- Add start-user-app script to the root package.json
+```
+    "start-user-app":"cd ./apps/user-app && npm run start"
+```
+
+
+-- Now containarise --
+
+```
+$ cp ./docker/Dockerfile.user ./Dockerfile
+
+$ docker build -t mypaytmuserapp .
+
+or 
+
+$ docker build -t mypaytmuserapp -f docker/Dockerfile.user .
+```
+
+--------- 2. Create the CD pipeline --------------
+
+main steps.
+-- 1. Clones the repo
+-- 2. Builds the docker image / Dockerize it.
+-- 3. Pushes image to docker.
+-- 4. Pushes it to EC2 or any other machine.
+
+
+pre-requisites: 
+1- create a repo at hub.docker.com 
+2- create access token at hub.docker.come for github.
+3- now at github repo/ setting/ security/ secrets and variables/ Actions/ secrets/ .. add docker username and 
+    password. which will be used by github repo action.
+
+Now, create .github/workflows/deploy.yml:
+```
+name: Build and Deploy to DockerHub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      
+      - name: Log into DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.user
+          push: true
+          tags: potenz/paytm-100xdevs:latest  //your username and repo name at hub.docker.com
+
+      - name: Verify Pushed Image
+        run: docker pull potenz/paytm-100xdevs:latest
+```
+
+
+Now, out of these main steps.
+-- 1. Clones the repo
+-- 2. Builds the docker image / Dockerize it.
+-- 3. Pushes image to docker.
+-- 4. Pushes it to EC2 or any other machine.
+
+we've done till 3. 
+
+now 4th can vary as the machine change for Deployment.
+
+
+For aws ec2 ubuntu machine. Below are the steps:
+
+
+1. -- Create an ec2 server
+-Download its keypair
+-Allow http/https traffic
+-ubuntu base image
+-Allow port 3005(as we'll use it later) on EC2 security bound group.
+
+
+2. -- Connect to the ec2 instance. 
+-- open terminal where .pem (keypair) file exists.
+-- $ ssh -i vishnukey2.pem ubuntu@54.88.60.76  // go to week 11 if ain't able to ssh.
+
+
+3. -- Download docker on that machine
+- https://docs.docker.com/engine/install/ubuntu/
+- sudo docker run hello-world 
+
+4. -- Update workflow to pull latest image on the ec2 machine
+
+deploy.yml
+```
+name: Build and Deploy to DockerHub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      
+      - name: Log into DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./docker/Dockerfile.user
+          push: true
+          tags: potenz/paytm-100xdevs:latest
+
+      - name: Verify Pushed Image
+        run: docker pull potenz/paytm-100xdevs:latest
+      
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with: 
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USERNAME}}
+          key: ${{secrets.SSH_KEY}}
+          script: 
+            sudo docker pull potenz/paytm-100xdevs:latest
+            sudo docker stop paytm-100xdevs || true
+            sudo docker rm paytm-100xdevs || true
+            sudo docker run -d --name paytm-100xdevs -p 3005:3000 --restart unless-stopped potenz/paytm-100xdevs:latest
+```
+
+5. Add all environment variables as well in github. and use it here for next app.
+```
+- name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USERNAME}}
+          key: ${{secrets.SSH_KEY}}
+          script: |
+            echo "Pulling latest image..."
+            sudo docker pull potenz/paytm-100xdevs:latest
+
+            echo "Stopping and removing old container..."
+            sudo docker stop paytm-100xdevs || true
+            sudo docker rm paytm-100xdevs || true
+
+            echo "Running new container..."
+            sudo docker run -d --name paytm-100xdevs \
+              -e NEXTAUTH_SECRET=${{secrets.NEXTAUTH_SECRET}} \
+              -e NEXTAUTH_URL=${{secrets.NEXTAUTH_URL}} \
+              -e DATABASE_URL=${{secrets.DATABASE_URL}} \
+              -p 3005:3000 --restart unless-stopped potenz/paytm-100xdevs:latest
+```
+
+
+--
+5. Point userapp.your_domain.com to the IP of the server
+
+6. Add nginx reverse proxy to forward requests from userapp.your_domain.com to the port on which the app is 
+running.

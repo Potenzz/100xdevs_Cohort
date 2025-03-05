@@ -33,3 +33,124 @@ Its link : https://github.com/Potenzz/paytm-100xdevs
 7. How much complexity is needed:
     1. Depends on the size of the company, For a startup, whatever helps you move fast who tech debt. For a 
     company there are lot of layers of reviews to go through.
+
+
+
+
+
+
+
+
+
+---- My notes ------
+
+
+Architecture - 
+
+1. Nextjs app - Users 
+2. Nextjs app - Merchant
+3. DB - have tables - Users/Balances/Transfers
+4. Bank webhook handler (nodejs/cloudflare)- Another Separate BE which will connect to BankAPI. and connected to 
+DB. (for money Transfers) - kind of 
+webhook. Making it Separtae as it should be highly avaiable while banking communication.
+5. User withdrawal sweeper (nodejs): make trasactional requests in queue.
+6. Bank sweeper : for Merchant. 
+
+
+
+Tech Stack -
+
+1. Frontend and Backend - Nextjs (or backend).
+2. Express - Auxilary backend
+3. Turborepo
+4. Postgres Database.
+5. Prisma ORM.
+6. Tailwind.
+
+
+Hot paths:
+1. send money to someone
+2. withdraw balance of Merchant
+3. withdraw balance of user bank to bank.
+4. webhook from banks to trasfer in money.  
+
+
+-------------------- Bootstrapping:
+
+---
+
+1. npx create-turbo@latest
+
+2. rename apps to, user-app and merchant-app. 
+
+3. add tailwind to each app:
+```
+cd apps/user-app
+npm install tailwindcss @tailwindcss/postcss postcss
+
+follow more steps at tailwind documention with Nextjs.
+
+same with cd ../merchant-app
+```
+
+
+---
+instead of step 1st to 4th, you can simply follow this example "npx create-turbo@latest -e with-tailwind". 
+or checkout their github.
+
+----
+
+
+4. add gloabal prisma db. 
+
+packages/db:
+```
+npm init -y
+npx tsc --init
+npx primsa init
+npx primsa migrate dev --name init
+```
+
+create packages/db/src/index.ts:
+```
+export * from "@prisma/client";
+```
+
+in packages/db/package.json:
+```
+  "exports":{
+    "./client":"./src/index.ts"
+  }
+```
+
+so everyone in app, will get client from here.by this:
+```
+import {PrismaClient} from "@repo/db/client"
+```
+
+
+5. On Ramping : Creating A bank_webhook_handler nodejs app
+(also create a dummy bank server for testing purpose.)
+
+
+firstly, creating bank_webhook_handler:
+```
+cd apps
+mkdir bank_webhook_handler
+cd bank_webhook_handler
+npm init -y 
+npx tsc --init 
+npm i esbuild express @types/express 
+```
+
+change the tsconfig file.(extends from packages)
+
+--migrate the primsa db. see in migration with name onRamp
+
+-- add dummy seed.ts data in db.
+```
+npx prisma db seed
+``` 
+
+
+-- 

@@ -200,8 +200,48 @@ jobs:
 ```
 
 
---
-5. Point userapp.your_domain.com to the IP of the server
+---------------------- Adding nginx - reverse proxy.  ---------------------------
 
-6. Add nginx reverse proxy to forward requests from userapp.your_domain.com to the port on which the app is 
+5. Add nginx reverse proxy to forward requests from userapp.your_domain.com to the port on which the app is 
 running.
+
+by bash commands:
+```
+$ ssh -i key.pem ubuntu@ec2_ip
+
+$ sudo apt install nginx
+
+$ sudo vim /etc/nginx/sites-available/paytm-100xdevs
+
+
+press i and paste the code:
+`````
+server {
+    listen 80;
+    server_name 54.88.60.76;  # Accepts all requests (or replace _ with your domain when you get one)
+
+    location / {
+        proxy_pass http://localhost:3005;  # Your Next.js app running in Docker
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+`````
+
+Press Esc, then type :wq and hit Enter to save and exit.
+
+
+
+$ sudo ln -s /etc/nginx/sites-available/paytm-100xdevs /etc/nginx/sites-enabled/
+
+$ sudo nginx -t
+
+$ sudo systemctl restart nginx
+```
+
+
+
+6. ------------ Point userapp.your_domain.com to the IP of the server ---------------

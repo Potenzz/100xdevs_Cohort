@@ -1,0 +1,79 @@
+Middleware can be used for such cases in nextjs:
+
+- Authentication and Authorization : Ensure user identity and check session cookies. 
+- Logging and Analytics: Capture and ananlyze request data for insights before processing by page of api.
+- Redirecting. 
+
+
+
+---------------- Adding Middleware -------------
+
+1. Create middleware.ts in root folder i.e myapp/middleware.ts
+
+"note: it only catch middlewares if its in this file else it won't notice. "
+
+2. Add below code:
+```
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+let requestCount = 0;
+export function middleware(request: NextRequest){
+    requestCount++;
+    console.log("Number of request : " + requestCount);
+    return NextResponse.next()
+}
+```
+
+
+But this approach runs middleware of every route/request. so for specific routes.
+
+3. Approch 2:
+
+-- Add a dummy api route(my-app/app/api/user/route.ts)
+```
+import { NextResponse } from "next/server";
+
+export function GET(){
+    return NextResponse.json({
+        message: "Hi there"
+    })
+}
+```
+
+-- Update middleware.ts: 
+```
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+let requestCount = 0;
+export function middleware(request: NextRequest){
+    requestCount++;
+    console.log("Number of request : " + requestCount);
+    return NextResponse.next()
+}
+
+export const config = {
+    matcher: '/api/:path*',
+}
+```
+
+
+This will keep middleware on apis. but for more selective running middleware. 
+
+3. --- more selective -----
+```
+import { NextResponse } from "next/server"
+import { NextRequest } from "next/server"
+
+export function middleware(request: NextRequest){
+    console.log(request.nextUrl.pathname);
+    if(request.nextUrl.pathname.startsWith("/admin")){
+        return NextResponse.redirect(new URL("/signin", request.url))
+    }
+
+    if(request.nextUrl.pathname.startsWith('/dashboard')){
+        return NextResponse.next()
+    }
+}
+```

@@ -1,0 +1,124 @@
+
+----------- Client side rendering ----------- 
+It is a modern technique where the rendering of webpage is done in the browser usign 
+javascript. Instead of server sending fully rendered HTML page to the client.
+eg: done in react framework.
+
+----------- Server side rendering -----------
+When the rendering process(converting js component into html) happens on the server. 
+eg. done in nextjs.
+
+Downside of SSR:
+1. Expensive since every request needs to be rendered on the server. 
+2. Harder to scale, you can't cache to CDNs(Content Delivery network.)
+
+
+----------- Static Site Generation ---------------
+
+If a page uses static site generation, the page HTML is generated at build time. That means in production, the
+page HTML is generated when you run next build. This HTML will then be reused on each request. It can be cached
+be the CDNs.
+
+Why? 
+If you use static site generation, you can defer the expensive operation of rendering a page to the build time
+so it only happens once.
+
+How? 
+Let's say you have an endpoint that gives you all the global todos of an app. 
+By globaltodos  we mean that they are same for all users, and hence this page can be statically generated. 
+
+
+- Now, if there's something which needs to be generated again in static site in nextjs.
+then in nextjs we can refresh that content without buildint the whole page again. with below codes:
+
+
+1--------------. Clear cache for every 10 sec.
+```
+const res = await fetch("https://backend", {
+    next: {revalidate: 10}
+})
+this will gets new data at every 10 sec, when user asks.
+
+
+
+
+2-------------. Clear cache in a next action.
+
+/pages/index.tsx
+```
+import { revalidateTag } from "next/cache";
+
+export default async function Home() {
+  const res = await fetch("https://api.example.com/posts", { 
+    next: { tags: ["posts"] }  // Attach "posts" tag to this data
+  });
+
+  const posts = await res.json();
+
+  return (
+    <div>
+      <h1>Latest Blog Posts</h1>
+      <ul>
+        {posts.map((post) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+
+/app/actions/revalidate.ts
+```
+"use server";
+
+import { revalidateTag } from "next/cache";
+
+export default async function revalidatePosts() {
+  revalidateTag("posts");  // Clear cache for "posts" data
+}
+```
+
+now, let say when any user add new post, we can delete the old cache and refresh with new post, without 
+rebuilding the whole site.
+
+```
+"use client";
+
+import { useState } from "react";
+import revalidatePosts from "@/app/actions/revalidate";
+
+export default function AdminPage() {
+  const [title, setTitle] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    // Send new post data to backend
+    await fetch("https://api.example.com/posts", {
+      method: "POST",
+      body: JSON.stringify({ title }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // After adding a new post, clear the cache so homepage updates
+    await revalidatePosts();
+  }
+
+  return (
+    <div>
+      <h1>Add New Blog Post</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter post title"
+        />
+        <button type="submit">Publish</button>
+      </form>
+    </div>
+  );
+}
+```

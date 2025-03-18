@@ -1,0 +1,266 @@
+Backend Communication
+Types of Communication
+WebSockets
+Creating WebSockets in Nodejs
+Client Side code for websocket
+
+
+
+-------------------------------------- Backend Communication -------------------------------------
+In real world, you have various backend systems, not just once. 
+These backend systems can include databases, authentication servers, caching services, third-party APIs, and 
+microservices.
+
+
+1. **Types of Backend Systems**  
+   - **Databases** (SQL, NoSQL) – Store and retrieve application data.  
+   - **Authentication Servers** – Handle user login, JWT, OAuth, etc.  
+   - **Caching Services** (Redis, Memcached) – Improve response speed.  
+   - **Microservices** – Modular services handling specific tasks.  
+   - **Third-Party APIs** – External services for payments, maps, etc.  
+
+2. **Communication Protocols**  
+   - **HTTP/HTTPS** – RESTful APIs for standard web communication.  
+   - **WebSockets** – Real-time, bidirectional communication.  
+   - **gRPC** – High-performance communication with Protocol Buffers.  
+   - **Message Queues** (RabbitMQ, Kafka) – Asynchronous data processing.  
+
+3. **Backend Integration Methods**  
+   - **Monolithic Architecture** – Single large backend handling all functions.  
+   - **Microservices Architecture** – Independent services communicating via APIs.  
+   - **Serverless Functions** – Small cloud-executed functions on demand.  
+
+4. **Security Considerations**  
+   - **Token-Based Authentication** (JWT, OAuth) for secure access.  
+   - **Rate Limiting** to prevent API abuse.  
+   - **Data Encryption** (TLS, HTTPS) for secure transmission.  
+
+--------------- Types of Communication --------------------
+
+1. Synchronous (Strong Coupling)
+- HTTP(REST/GraphQL)
+- WebSockets(debatable if sync or async)
+
+2. ASynchronous (Weak Coupling)
+- Messaging Queues
+- Pub Subs
+- Server-Sent Events
+- WebSockets(debatable if sync or async)
+
+----------------------------------------- WebSockets -----------------------------------------------
+
+WebSockets provide a way to extablish a persistent, full-duplex communication channel over a single TCP connection
+between the client(typically a web browser) and the server.
+
+
+Browser -> did handshake once then maintain persistent connection with -> server 
+
+Use cases for WebSockets: 
+
+- Real-Time Applications: chat application live sports updates, realtime gaming. 
+- Live Feeds: Financial Tickers, news feeds and social media updates are examples where WebSockets can be used to 
+push live data to users. 
+- Interactive Services: Collaborative editing tools, live customer support chat and interactive webinars.
+
+
+
+Why not use HTTP/REST? Why need ws? 
+
+1. network handshake happens for every request. 
+2. No way to push server side events(you can use polling but not the best approach.)
+
+leetcode uses polling when you submit the problem.
+
+
+
+
+
+--------------------------------- Creating WebSockets in Nodejs ------------------------------------
+
+There are various libraries lets you create a ws server, similar express lets you create an HTTP server.
+
+1. npmjs.com/packages/websocket
+2. github.com/websockets/ws
+3. socket.io - socket is great, but it's harder to support multiple platforms in it(android, ios, rust.)
+
+we'll be using ws library here:
+
+```
+npm init -y 
+npx tsc --init 
+npm i ws @types/ws
+```
+
+in src/index.ts:
+```
+import WebSocket, {WebSocketServer} from "ws";
+import http from "http";
+
+const server = http.createServer(function(request: any, response:any){
+    console.log((new Date()) + "Received request for " + request.url);
+    response.end("Hi there.");
+})
+
+const wss = new WebSocketServer({server});
+
+wss.on("connection", function connection(ws){
+    ws.on("error", console.error);
+
+    ws.on("message", function message(data, isBinary){
+        wss.clients.forEach(function each(client){
+            if (client.readyState === WebSocket.OPEN){
+                client.send(data, {binary:isBinary});
+            }
+        })
+    });
+
+    ws.send("Hello! Message from server.")
+})
+
+server.listen(8080, function(){
+    console.log((new Date())+"Server is running on PORT 8080");
+})
+```
+
+with express:
+```
+import WebSocket, {WebSocketServer} from "ws";
+import express from "express";
+
+const app = express();
+const httpServer = app.listen(8080);
+
+const wss = new WebSocketServer({server: httpServer});
+
+wss.on("connection", function connection(ws){
+    ws.on("error", console.error);
+
+    ws.on("message", function message(data, isBinary){
+        wss.clients.forEach(function each(client){
+            if (client.readyState === WebSocket.OPEN){
+                client.send(data, {binary:isBinary});
+            }
+        })
+    });
+
+    ws.send("Hello! Message from server.")
+})
+```
+
+
+--------------------------------------- Client Side code for websocket --------------------------------------
+
+websocket is a broswer api that you can access. (very similar to fetch)
+will work in a raw project, react project, next project(need to be client side)
+
+
+---------- We'll see in React project. ---------------------
+```
+npx create vite@latest
+```
+
+
+in app.tsx:
+```
+import { useEffect, useState } from "react";
+
+function App() {
+  const [socket, setSocket] = useState< null | WebSocket>(null);
+  const [latestMessage, setLatestMessage] = useState("");
+  const [sendMessage, setSendMessage] = useState("");
+
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:8080");
+
+    socket.onopen = () => {
+      console.log("Connected to ws");
+      setSocket(socket)
+    };
+
+    socket.onmessage = (message) => {
+      console.log("Received Message: ", message.data)
+      setLatestMessage(message.data)
+    };
+
+    return () => {
+      console.log("Closing WebSocket connection...");
+      socket.close();
+    };
+  }, []);
+
+  if(!socket){
+    return <div>
+      conencting to socket server...
+    </div>
+  }
+
+  return <div>
+    <input onChange={(e)=>{
+      setSendMessage(e.target.value)
+    }}></input>
+
+    <button onClick={()=>{
+      socket.send(sendMessage);
+    }}> Send Message</button>
+
+    <div>{latestMessage}</div>
+  </div>
+}
+
+export default App;
+```
+
+
+
+
+----------- In next js project -----------------
+
+```
+"use client"
+import { useEffect, useState } from "react";
+
+export default function(){
+  const [socket, setSocket] = useState< null | WebSocket>(null);
+  const [latestMessage, setLatestMessage] = useState("");
+  const [sendMessage, setSendMessage] = useState("");
+
+  useEffect(() => {
+    const socket = new WebSocket("ws://localhost:8080");
+
+    socket.onopen = () => {
+      console.log("Connected to ws");
+      setSocket(socket)
+    };
+
+    socket.onmessage = (message) => {
+      console.log("Received Message: ", message.data)
+      setLatestMessage(message.data)
+    };
+
+    return () => {
+      console.log("Closing WebSocket connection...");
+      socket.close();
+    };
+  }, []);
+
+  if(!socket){
+    return <div>
+      conencting to socket server...
+    </div>
+  }
+
+  return <div>
+    <input onChange={(e)=>{
+      setSendMessage(e.target.value)
+    }}></input>
+
+    <button onClick={()=>{
+      socket.send(sendMessage);
+    }}> Send Message</button>
+
+    <div>{latestMessage}</div>
+  </div>
+}
+
+export default App;
+``` 

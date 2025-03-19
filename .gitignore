@@ -19,6 +19,3 @@ App-1/
 
 #ignore all .pem files
 *.pem
-
-#just for now
-Readme.md

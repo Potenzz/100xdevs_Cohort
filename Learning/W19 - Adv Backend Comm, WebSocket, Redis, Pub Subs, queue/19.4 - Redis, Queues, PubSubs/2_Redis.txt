@@ -1,0 +1,235 @@
+----------------------------- Redis -----------------------------
+Redis is an open-source, in-memory data structure store, used as database, cache and message broker.
+
+One of its key feature is its ability to keep all data in memory, which shows for high performance and 
+low latency access to data. 
+
+
+-------------  In memory data structure store ----------------
+
+Very similar to a DB, only it is in memory. That doesn't mean it doesn't have persistence. 
+
+- RDB (Redis Database file): The RDB Persistence performs point-in-time snapshots of your dataset at 
+specified intervals. It creates a compact single-file representation of the entire Redis dataset. The
+snapshotting process can be configured to run at specific intervals.
+such as every X minutes if Y keys have changed. 
+
+-AOF (Append only file): The AOF persistence logs every write operation received by the server, 
+appending each operation to a file. This file can then be replaced on startup to reconstruct 
+the dataset.
+
+
+----- its use-case ----
+
+(think the website is of a Blogging site.)
+
+Like, instead of hitting database for every time user comes, we can make one request and cache it with 
+the help of redis, and serve this cache everytime for user. 
+
+and keep on updating this cache on let say every 10 min. 
+
+
+------ a scenario -----
+
+and if admin make new change in database, then simply 
+first clean the cache, then update the database. 
+
+However, you might think to update the database first, then update the redis or vice-versa. 
+but, this is not ideal as if backend crashes in between these two request, like db is updated but 
+backend goes down then redis is not updated. and vice-versa. 
+
+Hence, ideally, you should clear the redis cache first, then make a db call to update. 
+
+
+
+
+
+-------------- Starting Redis Locally ------------------
+
+```
+docker run --name my-redis -d -p 6379:6379 redis
+
+docker exec -it container_id /bin/bash
+
+redis-cli
+```
+
+
+
+
+-------------- Redis as a DB ---------------------------------
+
+```
+SET mykey "hello"
+
+GET mykey
+
+DEL mykey 
+
+
+SET tracks "{"name":"any", "description":"nill"}"   //only in strings not as objects.
+```
+
+
+HSET/HGET/HDEL (H=Hash)
+```
+HSET user:100 name "john" email "jhon@gmail.com" age "30"
+HGET user:100 name
+HGET user:100 email
+```     
+
+
+
+------------ Redis as a queue ------------------------------
+
+You can also push to a topic/queue on Redis and other processes can pop from it. 
+Good example of this is Leetcode submission that needs to be processed asynchronously
+
+
+-- Pushing to a queue. 
+
+LPUSH problems 1
+LPUSH problems 2
+
+-- Popping from a queue
+
+RPOP problems
+RPOP problems
+
+
+-- Blocked pop
+
+BRPOP problems 0
+BRPOP problems 30
+
+means, it will only pop when the queue comes, if nothing is there it will be blocked till it comes.
+the last argument represents the timeout before the blocking should be stopped.
+
+
+--------------- Talking to Redis via Node.js ------------------
+
+There are various client that exist that let you talk to redis via node.js
+
+npm.js/packages/redis
+
+Lets initialize a simple nodejs express server that takes a problem submission as input and sends
+it to the queue.
+
+Lets also create a worker service that picks up a problem, waits for 2 seconds and then proceeds to 
+pick the next one. 
+
+
+preq: have a redis running locally, do it via docker, 
+
+---
+
+Create an empty node.js project. 
+initialize two folder in it. express server and worker.
+
+```
+npm init -y 
+npx tsc --init
+```
+
+--for express server. 
+npm i express @types/express redis
+
+--for worker
+npm i redis 
+
+
+---------------------- index.ts in express server -------------------------
+```
+import express from "express";
+import { createClient } from "redis";
+
+
+const app = express();
+app.use(express.json())
+
+const client = createClient();
+// Equivalent to createClient({ url: "redis://localhost:6379" })
+
+client.on('error', (err => console.log("Redis Client Error", err)))
+
+
+app.post("/submit", async (req, res) => {
+    const {problemId, code, language} = req.body;
+
+    try{
+        await client.lPush("problems", JSON.stringify({code, language, problemId}))
+        // store in database
+        res.status(200).send("Submission received and stored.");
+    }catch(e){
+        console.error("Redis Error", e);
+        res.status(500).send("Failed to store submission")
+    }
+})
+
+async function startServer(){
+    try{
+        await client.connect();
+        console.log("Connected to Redis");
+
+        app.listen(3000, ()=> {
+            console.log("Server is running on port 3000");
+        })
+    }catch(e){
+        console.log("Error while connection to Redis: ", e)
+
+    }
+}
+
+startServer();
+```
+
+
+------------------ index.ts for worker: ---------------
+
+```
+import { createClient } from "redis";
+const client = createClient();
+client.on('error', (err => console.log("Redis Client Error", err)))
+
+async function processSubmission(submission:string){
+    const {problemId, code, language} = JSON.parse(submission);
+
+    console.log(`Processing the submisson for problemId ${problemId} ...`);
+    console.log("Code", code);
+    console.log("Language", language);
+
+    //here you will run the actual logic of running the code.
+    //instead of running, here i'm simulating proccessing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    console.log(`Finished the submisson for problemId ${problemId} ...`);
+}
+
+async function startWorker(){
+    try{
+        await client.connect();
+        console.log("Connected to Redis");
+
+        while(true){
+            try{
+                const submission = await client.brPop("problems", 0);
+
+                //@ts-ignore
+                await processSubmission(submission?.element)
+
+            }catch(e){
+                console.log("Error processing submission", e)
+                // put this problem back to the queue, 
+                // log the error to a file, to fix it
+            }
+        }
+    }catch(e){
+        console.log("Error while connection to Redis: ", e)
+    }
+}
+startWorker();
+```
+
+
+
+---------------------- will use pubsubs, via nodejs soon---------------------

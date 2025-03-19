@@ -1,0 +1,67 @@
+
+
+-------------------------------- Queues, Pub Subs ----------------------------
+
+Queues:
+
+- Simply a queue to maintain tasks based on a First-In-First-Out (FIFO) system.
+- Useful for handling tasks asynchronously and managing workloads.
+- Acts as a buffer to balance workload between producers (task creators) and consumers (workers).
+- Helps ensure reliable task processing, even if workers crash or go offline temporarily.
+- Examples: Redis List, RabbitMQ, AWS SQS.
+
+PubSubs:
+
+- Act as a load balancer for WebSockets, distributing messages efficiently.
+- Help to scale WebSocket connections across multiple servers, making the system more resilient.
+- Facilitate communication between multiple WebSocket connections (like rooms or channels).
+- Decouple publishers (message senders) and subscribers (message receivers) for better flexibility.
+- Enable broadcasting messages to multiple subscribers simultaneously.
+- Can handle real-time notifications and live updates efficiently.
+- Reduce direct dependencies — publishers don’t need to know subscribers.
+- Examples: Redis Pub/Sub, Apache Kafka, AWS SNS.
+
+
+-------------
+We'll see how to build a system like leetcode. 
+
+---
+Browser -> {question data} -> [ 
+
+    (Primary backend) -> [queue] -> (Workers 1, W2, and so on.. ) -> (Pub Subs) -> (specific WebSockets)
+    
+] -> Browser
+
+---
+explaination of this arcitecture:
+
+Browser -> {question data}:
+The user submits code along with question data from their browser.
+
+Primary Backend:
+
+Receives the submission and validates it.
+Sends the job (code submission) to a queue for processing.
+This can be a REST API or WebSocket connection.
+Queue:
+
+Temporarily stores submissions to handle concurrency.
+Acts as a buffer so that workers aren't overwhelmed.
+Example technologies: Redis, RabbitMQ, AWS SQS.
+Workers (W1, W2, ...):
+
+These are the job processors.
+They pull submissions from the queue and execute the code in a secure, isolated environment.
+After processing, they publish results (like pass/fail) to a Pub/Sub system.
+Pub/Sub System:
+
+Distributes the results to specific WebSockets.
+Ensures that the right user receives the result of their submission.
+Example technologies: Redis Pub/Sub, Kafka, AWS SNS.
+Specific WebSockets:
+
+Maintain a connection with the user's browser.
+Receive results in real time, providing instant feedback.
+
+
+----------------------------- 

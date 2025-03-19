@@ -1,0 +1,34 @@
+## Queues
+- **Definition:** A queue is a data structure that follows the First-In-First-Out (FIFO) principle.
+- **Use Cases:** Task scheduling, background jobs, request management, buffering data.
+- **Types:**
+  - Simple Queues: Basic FIFO structure.
+  - Priority Queues: Elements have priority levels; higher priority gets dequeued first.
+  - Circular Queues: Fixed-size queues that wrap around.
+- **Operations:**
+  - Enqueue: Adding an element.
+  - Dequeue: Removing an element.
+- **Examples:** Message brokers like RabbitMQ, AWS SQS.
+
+## Pub/Sub (Publish-Subscribe)
+- **Definition:** A messaging pattern where publishers send messages without knowing the receivers (subscribers).
+- **Components:**
+  - Publishers: Emit messages to a channel or topic.
+  - Subscribers: Listen to specific channels or topics for messages.
+- **Advantages:** Decouples communication, efficient broadcasting, scalability.
+- **Disadvantages:** No guarantee of message delivery (unless handled by broker).
+- **Use Cases:** Event-driven systems, notifications, real-time updates.
+
+## Redis
+- **Definition:** An in-memory data structure store, often used as a cache, message broker, and database.
+- **Features:** Fast data access, persistence options, supports strings, lists, sets, sorted sets, hashes.
+- **Queues in Redis:** Uses lists (`LPUSH`, `RPOP`) to implement queues.
+- **Pub/Sub in Redis:** Publishers send messages to channels; subscribers listen to channels.
+- **Common Commands:**
+  - `PUBLISH <channel> <message>`: Publish a message to a channel.
+  - `SUBSCRIBE <channel>`: Subscribe to a channel.
+- **Use Cases:** Caching, real-time analytics, leaderboard systems, messaging.
+
+---
+**Summary:** Queues and Pub/Sub are essential for asynchronous communication and message processing. Redis effectively supports both models with high performance, making it versatile for scalable, real-time applications.
+

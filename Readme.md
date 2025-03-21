@@ -21,6 +21,7 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
    - Advance Backend Communication, 
    - WebSockets,
    - Redis, Queues, Pub Subs
+   - OpenAPI Specs with hono and TSOA
 
 3. **Database Management**  
    - NoSQL Databases (MongoDB)  

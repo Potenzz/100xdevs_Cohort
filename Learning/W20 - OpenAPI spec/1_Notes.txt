@@ -1,0 +1,236 @@
+
+
+--------------------------- OpenAPI Spec ----------------------------
+
+When you create backend, it's very hard for other people to know exact shape of your routes. 
+Would't it be nice if you could describe in a single file tha shape of your routes.
+
+
+If you have single long file that could list all your routes, you could
+- Auto generate documentation pages. 
+- Auto generate clients in various languages(Java, JS, Go)
+- Let the world look at your api routes shape without opening your code. 
+- Let the AIs hit your api routes.
+
+
+--What is OpenAPI Specification ---
+OpenAPI Specification (OAS) is a standard for defining RESTful APIs. It allows both humans and machines 
+to understand API capabilities without access to the implementation.
+
+
+------------ Parts of Spec File -------------------------
+
+For a simple server: 
+```
+import express from "express";
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+let users = [
+    { id: 1, name: "jhon doe"},
+    { id: 2, name: "jane doe"}
+];
+
+app.get("/users", (req, res)=>{
+    const {name} = req.query;
+
+    if(typeof name==="string"){
+        const filteredUsers = users.filter(user => user.name.toLowerCase().includes(name.toLowerCase()))
+        res.json(filteredUsers);
+    }else{
+        res.json(users)
+    }
+});
+
+app.listen(port, ()=>{
+    console.log(`Server is runnign on port ${port}`)
+});
+```
+
+
+OpenAPI Spec:
+```
+openapi: 3.0.0
+info:
+  title: Simple User API
+  description: API for managing users
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /users:
+    get:
+      summary: Get users
+      description: Retrieves a list of users. Optionally, filter users by name.
+      parameters:
+        - name: name
+          in: query
+          description: Filter users by name (case-insensitive)
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    name:
+                      type: string
+                      example: "John Doe"
+```
+
+
+---------------- How to generate OpenAPI Spec file --------------------
+
+1. Write it by hand(bad, but still happens)
+
+2. Auto generate it from your code
+  2.1. Easy in languages that have deep types like Rust. 
+  2.2. Slightly harder in languages like Go/JavaScript
+  2.3. Nodejs has some libraries/codebases that lets you do it. 
+    2.3.1 - With Express -  https://www.npmjs.com/package/express-openapi (highly verbose)
+    2.3.2 - Without Express - https://github.com/lukeautry/tsoa (see 2_Notes.txt)
+  2.4 - Hono has a native implementation with zod. - https://hono.dev/examples/zod-openapi
+
+
+Well'be going through 2.4 With Homo
+
+
+
+----------------- HONO + ZOD + OPENAPI SPEC -------------------------
+
+```
+npm create hono@latest 
+
+npm i @hono/zod-openapi
+```
+
+the index.ts:
+```
+import { z } from '@hono/zod-openapi'
+import { createRoute } from '@hono/zod-openapi'
+import { OpenAPIHono } from '@hono/zod-openapi'
+import { swaggerUI } from '@hono/swagger-ui'
+
+// the input schema from the user on the route
+const ParamsSchema = z.object({
+  id: z
+    .string()
+    .min(3)
+    .openapi({
+      param: {
+        name: 'id',
+        in: 'path',
+      },
+      example: '1212121',
+    }),
+})
+
+// the output schema , user will get in reponse
+const UserSchema = z
+  .object({
+    id: z.string().openapi({
+      example: '123',
+    }),
+    name: z.string().openapi({
+      example: 'John Doe',
+    }),
+    age: z.number().openapi({
+      example: 42,
+    }),
+  })
+  .openapi('User')
+
+// defining route
+const getUserRoute = createRoute({
+  method: 'get',
+  path: '/users/{id}',
+  request: {
+    params: ParamsSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        'application/json': {
+          schema: UserSchema,
+        },
+      },
+      description: 'Retrieve the user',
+    },
+  },
+})
+
+
+const app = new OpenAPIHono()
+
+//adding swagger ui
+app.get('/ui', swaggerUI({ url: '/doc' }))
+
+
+//here, using that defined route.
+app.openapi(getUserRoute, (c) => {
+  const { id } = c.req.valid('param')
+  return c.json({
+    id,
+    age: 20,
+    name: 'Ultra-man',
+  })
+})
+
+// The OpenAPI documentation will be available at /doc
+app.doc('/doc', {
+  openapi: '3.0.0',
+  info: {
+    version: '1.0.0',
+    title: 'My API',
+  },
+})
+
+app.onError((err, c) => c.text(`Error: ${err.message}`, 500))
+
+export default app
+```
+
+
+
+------ Auto Generated Clients --------------
+
+
+Given you have a yaml/json file that describe the shape of your route, lets try generatinng a 
+ts client that we can use in a Node.js/React app to talk to the backend.
+
+ref :  npmjs.com/packages/openapi-typescript-codegen
+
+1. Store the spec.json file. 
+
+2. 
+```
+npm install openapi-typescript-codegen --save-dev
+
+npx openapi-typescript-codegen --input ./spec.json --output ./generated
+```
+
+3. See /generated folder. 
+
+4. now use it like this:
+```
+import { DefaultService } from '../generated'
+const response = await DefaultService.getUsers("id")
+```
+
+
+// make sure to give base url in openapi spec file.   

@@ -1,0 +1,65 @@
+
+-------------------------- Generating Spec file with tsoa -------------------------------
+
+follow its starting guide:
+https://github.com/lukeautry/tsoa
+
+1.
+```
+npm init -y
+npx tsc --init
+
+
+npm i tsoa express 
+npm install --save-dev typescript @types/node @types/express
+```
+
+2. add this in tsconfig:
+```
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+``
+
+3. create a tsoa.json
+```
+{
+  "entryFile": "src/app.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/**/*Controller.ts"],
+  "spec": {
+    "outputDirectory": "build",
+    "specVersion": 3
+  },
+  "routes": {
+    "routesDir": "build"
+  }
+}        
+```
+
+
+and, follow as the starting guide will tell you. then
+
+```
+mkdir -p build
+npx tsoa routes
+
+npx tsc --outDir build --experimentalDecorators
+node build/src/server.js
+```
+
+
+Now, weve written verbose code, which will further create a express server, and openapi spec. 
+```
+npx tsoa spec
+```
+
+This will auto generate openapi spec file in build folder. as swagger.json.
+
+
+
+--- add swagger ui , with its guide if you want --
+

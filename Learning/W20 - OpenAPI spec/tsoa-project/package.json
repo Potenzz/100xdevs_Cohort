@@ -1,0 +1,22 @@
+{
+  "name": "tsoa-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsoa spec-and-routes && tsc",
+    "start": "node build/src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2",
+    "tsoa": "^6.6.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.11",
+    "typescript": "^5.8.2"
+  }
+}

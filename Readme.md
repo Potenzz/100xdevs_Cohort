@@ -22,6 +22,7 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
    - WebSockets,
    - Redis, Queues, Pub Subs
    - OpenAPI Specs with hono and TSOA
+   - DDOS, RateLimiting
 
 3. **Database Management**  
    - NoSQL Databases (MongoDB)  

@@ -1,0 +1,221 @@
+Stateful vs Stateless Backends. 
+State Management in Backend app
+Singleton Patttern
+
+
+----------------------------- Stateful vs Stateless Backends. -------------------------------
+
+--- Stateless Servers : Usually when you write HTTP servers, the dont hold any state. 
+This means, they dont' have any in memory variables that they use. 
+They Usually rely on the database for state. 
+
+
+Advantage: 
+1. Users can connect to a random server( as there are no of Backend servers for Large Appliaction.), there is no need
+ of stickness. 
+2. Can autoscale up and down easily ans simply decide where to route traffic based on CPU usage. 
+
+
+--- Stateful servers : A lot of times, you make servers hold a state. 
+for examples: 
+1. Creating in memory cache: 
+2. Storing the state of chess game,
+3. storing a list of 10 most latest chats in memory for a chat application. 
+
+In case 1, there is no need of stickiness. 
+In case of 2, 3 there is need of stickiness
+
+Stickiness: Making sure that user who is interested in specific room, gets connected to that specfic server.
+
+
+
+-------------------------- State Management in Backend App  ---------------------------------------
+
+-- State In JS process
+
+-------------- Beginner way to create state in JS process ------------
+
+-- store.ts:
+```
+interface Game {
+    id: string;
+    whitePlayerName: string;
+    blackPlayerName: string;
+    moves: string[];
+}
+
+export const games: Game[] = [];
+```
+
+-- logger.ts:
+```
+import { games } from "./store";
+
+export function StartLogger() {
+  setInterval(() => {
+    console.log(games);
+  }, 5000);
+}
+```
+
+-- index.ts:
+```
+import { StartLogger } from "./logger";
+import { games } from "./store";
+
+StartLogger();
+
+setInterval(()=>{
+    games.push({
+        id: Math.random().toString(),
+        whitePlayerName:"first",
+        blackPlayerName:"second",
+        moves:[]
+    })
+}, 5000)
+```
+
+
+------
+This will work but a lot of times, you need to attach functionality to state as well. 
+Lets see how can we create a class called GameManager and expose some functions on it that can be called by 
+files using it. 
+
+
+-------------------------- Classes and Singleton Patttern -----------------------------
+
+Lets create a class that, 
+1. Stores games. 
+2. Expose functions that let you mutate the state. 
+
+
+------ Second way to create state in node process ---------
+
+
+-- store.ts
+```
+interface Game {
+    id: string;
+    whitePlayerName: string;
+    blackPlayerName: string;
+    moves: string[];
+}
+
+export class GameManager {
+    constructor(){
+        this.games = []
+    }
+
+    private games: Game[] = [];
+
+    public getGames(){
+        return this.games;
+    }
+
+    // e5e7 - move of chess 
+    public addMove(gameId: string, move: string){
+        const game = this.games.find(game=> game.id == gameId);
+        if(game){
+            game.moves.push(move)
+        }
+    }
+
+    public addGame(gameId: string, whitePlayerName: string, blackPlayerName: string){
+        const game = {
+            id: gameId, 
+            whitePlayerName: whitePlayerName, 
+            blackPlayerName: blackPlayerName, 
+            moves:  []
+        }
+
+        this.games.push(game)
+    }
+
+}
+
+/// keeping only one instance, and use it everywhere, for eg: to log,  to pushmoves, 
+export const gameManager  = new GameManager();
+```
+
+
+-- index.ts: 
+```
+import { StartLogger } from "./logger";
+import { gameManager } from "./store";
+
+StartLogger();
+
+setInterval(()=>{
+    gameManager.addGame(
+        Math.random().toString(),
+        "first",
+        "second",
+    )
+}, 5000)
+```
+
+
+--------- Another Better way to create state in node js process ------
+
+With Singleton Pattern : Completely prevent any developer from even creating a new instance of the GameManager cless.
+
+Static Attribute: In javascript, the keyword static is used in classes to declare static methods or static 
+properties. Static method and properties belong to the class itself rather than to any specfic instance 
+of the class. Heres' the breakdown of what it means. 
+
+store.ts
+````
+interface Game {
+    id: string;
+    whitePlayerName: string;
+    blackPlayerName: string;
+    moves: string[];
+}
+
+export class GameManager {
+    private static instance: GameManager;
+    private games: Game[] = [];
+
+
+    private constructor() {} // Private constructor prevents direct instantiation, or we can say it
+    // do not let create any instance for this class, i.e outside class.
+
+    
+    // only return one instance, 
+    public static getInstance(): GameManager{
+        if(!GameManager.instance){
+            GameManager.instance = new GameManager();
+        }
+        return GameManager.instance;
+    }
+
+    public getGames(){
+        return this.games;
+    }
+
+    // e5e7
+    public addMove(gameId: string, move: string):void{
+        const game = this.games.find(game=> game.id === gameId);
+        if(game){
+            game.moves.push(move)
+        }
+    }
+
+    public addGame(gameId: string, whitePlayerName: string, blackPlayerName: string): void{
+        const game = {
+            id: gameId, 
+            whitePlayerName: whitePlayerName, 
+            blackPlayerName: blackPlayerName, 
+            moves:  []
+        }
+
+        this.games.push(game)
+    }
+
+}
+
+// Exporting the singleton instance
+export const gameManager = GameManager.getInstance();
+
+```
+

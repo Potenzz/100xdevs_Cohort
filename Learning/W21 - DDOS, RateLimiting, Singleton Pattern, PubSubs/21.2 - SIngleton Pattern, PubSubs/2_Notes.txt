@@ -1,0 +1,204 @@
+PubSubs + Singleton Patttern
+
+
+---------------------------- PubSubs + Singleton Patttern -----------------------------------
+What if you want to create a system where users can subscribe to the feed of stocks(prices). 
+This application will be used by > 1m users. 
+How would you built it??
+
+-- 
+
+- Create a PubSubManager class (Singleton).
+- It keeps track of what all stocks are users on this server interested in. 
+- It tells the pub sub whenever a new stock is added or stock is removed from the list of interested stocks on that
+server
+- It relays the events to the right sockets whenever an event is received. 
+
+
+
+---------------------- Doing it -------------------------------
+
+- Start a pub sub (redis is a decent one)
+```
+docker run -d -p 6379:6379 redis
+docker exec -it container_id /bin/bash
+redis-cli
+```
+
+- create node application
+``` 
+npm init -y 
+npx tsc --init 
+npm instal redis 
+``` 
+
+------------- Create PubSubManager.ts -------------------
+```
+import { createClient, RedisClientType } from "redis";
+import { WebSocketManager } from "./WebSocketManager";
+import { WebSocketServer } from "ws";
+
+export class PubSubManager {
+  private static instance: PubSubManager;
+  private redisClient: RedisClientType;
+  private subscriptions: Map<string, string[]>;
+
+  //private constructor to prevent direct construction call
+  private constructor() {
+    this.redisClient = createClient();
+    this.redisClient.on("error", (err) => {
+      console.error("Redis Connection Error:", err);
+    });
+
+    this.redisClient
+      .connect()
+      .then(() => console.log("Connected to Redis!"))
+      .catch((err) => console.error("Redis Connection Failed:", err));
+
+    this.subscriptions = new Map();
+  }
+
+  public static getInstance(): PubSubManager {
+    if (!PubSubManager.instance) {
+      PubSubManager.instance = new PubSubManager();
+    }
+    return PubSubManager.instance;
+  }
+
+  public userSubscribe(userId: string, stock: string) {
+    console.log(`User ${userId} subscribing to ${stock}`);
+
+    if (!this.subscriptions.has(stock)) {
+      this.subscriptions.set(stock, []);
+    }
+
+    this.subscriptions.get(stock)?.push(userId);
+
+    if (this.subscriptions.get(stock)?.length === 1) {
+      console.log(`Subscribing to Redis channel: ${stock}`);
+
+      this.redisClient
+        .subscribe(stock, (message) => {
+          console.log(`🔔 Received message from Redis on ${stock}: ${message}`);
+          this.handleMessage(stock, message);
+        })
+        .catch((err) => console.error("❌ Redis Subscription Error:", err));
+    }
+  }
+
+  public userUnSubscribe(userId: string, stock: string) {
+    if (this.subscriptions.has(stock)) {
+      const subscribers = this.subscriptions.get(stock);
+      if (subscribers) {
+        const index = subscribers.indexOf(userId);
+        if (index !== -1) {
+          subscribers.splice(index, 1);
+          console.log(`User ${userId} unsubscribed from ${stock}`);
+        }
+        if (subscribers.length === 0) {
+          this.subscriptions.delete(stock);
+          this.redisClient.unsubscribe(stock);
+          console.log(`Unsubscribed from Redis channel: ${stock}`);
+        }
+      }
+    }
+  }
+
+  private handleMessage(stock: string, message: string) {
+    console.log(`Message received on channel ${stock}: ${message}`);
+
+    this.subscriptions.get(stock)?.forEach((sub) => {
+      console.log(`Sending message to user: ${sub}`);
+    });
+
+    WebSocketManager.getInstance().broadcastMessage(stock, message);
+  }
+
+  public async disconnect() {
+    await this.redisClient.quit();
+  }
+
+  public registerWebSocketServer(server: WebSocketServer) {
+    console.log("WebSocket server registered.");
+  }
+}
+
+```
+
+----------------- WebSocketManager.ts: ------------------
+```
+import { WebSocketServer } from "ws";
+import { PubSubManager } from "./PubSubManager";
+
+export class WebSocketManager {
+  private static instance: WebSocketManager;
+  private wss: WebSocketServer;
+
+  private constructor() {
+    this.wss = new WebSocketServer({ port: 8080 });
+    console.log("WebSocket server started on port 8080");
+
+    this.wss.on("connection", (ws) => {
+      console.log("Client connected to WebSocket");
+
+      ws.on("message", (message) => {
+        console.log(`Received: ${message}`);
+      });
+    });
+
+    PubSubManager.getInstance().registerWebSocketServer(this.wss);
+  }
+
+  public static getInstance(): WebSocketManager {
+    if (!WebSocketManager.instance) {
+      WebSocketManager.instance = new WebSocketManager();
+    }
+    return WebSocketManager.instance;
+  }
+
+  public broadcastMessage(stock: string, message: string) {
+    this.wss.clients.forEach((client) => {
+      if (client.readyState === 1) {
+        client.send(JSON.stringify({ stock, message }));
+      }
+    });
+  }
+}
+
+```
+
+
+--------------  index.ts  -----------------------------
+```
+import { PubSubManager } from "./PubSubManager";
+
+console.log("Starting PubSub System...");
+
+import { WebSocketManager } from "./WebSocketManager"; // Import WebSocketManager
+
+WebSocketManager.getInstance();
+
+setInterval(()=>{
+    console.log("Subscribing to RandomStock...");
+
+    PubSubManager.getInstance().userSubscribe(Math.random().toString(), "RandomStock")
+}, 20000)
+
+```
+
+------
+
+Now, this architecture is: 
+
+The Publisher(Stock exchange api something.) publish events at Redis. 
+```redis-cli publish RandomStock "Test Message" ```
+
+
+The Users Subscribe events at Redis, by PubSubManager Node app. 
+
+The PubSubManager Class forward events/messages to WebSockets then. 
+
+
+
+----- 
+User --> WebSocket -> PubSub --> Redis -> Publisher

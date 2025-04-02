@@ -1,0 +1,160 @@
+
+------------ Things will be discussed in this week: ---------------------
+
+Server : 
+- Cluster module and Vertical Scalling
+- Capacity Esitmation, ASGs and horizontal Scalling 
+- Load Balancers. 
+
+Databases 
+- Indexing 
+- Normalizaion 
+- Sharding 
+
+------------- Things discussed in this notes ---------------------
+
+-Vertical Scalling
+-Implementing Horizontal Scalling in Node.js Project
+
+
+
+------------------- Key Difference -----------------------
+
+Vertical Scaling (Scaling Up/Down): Increase server power (CPU, RAM, storage). Limited growth, 
+potential downtime.
+
+Horizontal Scaling (Scaling Out/In): Add more servers, load balancing, better scalability, and fault 
+tolerance.
+
+------------------------ Vertical Scalling ------------------------------ 
+
+Vertical Scalling means increasing the size of your machine to support more load. 
+
+
+Single Threaded language: No matter how many Core of CPUs are there, it will use only one core of CPU. 
+eg. JavaScript. 
+
+
+Multi Threaded language: Here, it will parallely run on all cores of CPU. 
+eg. Go/Java/Rust
+
+
+
+---
+Nodejs - (normal approach, neither Vertical nor horizontal)
+lets see the infinite loop, and see how our CPU reacts. 
+
+```
+let c=0; 
+
+while(1){
+    c++;
+}
+```
+
+Obviously, only one core of CPU will work at its full Capacity, else cors will be free. 
+
+
+
+--- 
+Rust:  (horizontal scalling approach.)
+```
+use std::thread;
+
+fn main(){
+    //spwan three thread
+    for _ in 0..3 { 
+        thread::spawn(|| {
+            let mut counter: f64 = 0.00;
+            loop {
+                counter += 0.001;
+            }
+        });
+    }
+
+    loop {
+        // Main thread does nothing but keeps the program alive.
+    }
+}
+
+
+here, it made 4 loops, (3+1).. and it will use 4 core at cpu. 
+
+
+
+
+
+
+------------------- Implementing Horizontal Scalling in Node.js Project ---------------------
+
+You can start multiple node project then? if there are 8 core, then just start 8 projects? 
+
+node index.js
+node index.js
+node index.js
+node index.js
+node index.js
+node index.js
+node index.js
+node index.js
+
+
+This ofcourse has lots of problem, 
+
+1. Just ugly to do this, keep track of the processes that are up and down. 
+2. Processes will have port conflicts, you'll have to run each process on separate port. 
+
+
+This is where the cluster module comes into the picture. 
+
+```
+import express from "express";
+import cluster from "cluster";
+import os from "os";
+
+const totalCPUs = os.cpus().length;
+
+const port = 3000;
+
+if (cluster.isPrimary) {
+  // means, if ran manually.
+  console.log(`Number of CPUs is ${totalCPUs}`);
+  console.log(`{process.pid} is running`);
+
+  //fork workers
+  for (let i = 0; i < totalCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on("exit", (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+    console.log("Forking another worker!");
+    cluster.fork();
+  });
+} else {
+  const app = express();
+  console.log(`Worker ${process.pid} started`);
+
+  app.get("/", (req, res) => {
+    res.send("Hello World!");
+  });
+
+  app.get("/api/:n", function (req, res) {
+    let n = parseInt(req.params.n);
+    let count = 0;
+
+    if (n > 5000000000) n = 5000000000;
+
+    for (let i = 0; i <= n; i++) {
+      count += 1;
+    }
+
+    res.send(`Final Count is ${count} by ${process.pid}`);
+  });
+
+  app.listen(port, () => {
+    console.log(`App listening on port ${port}`);
+  });
+}
+
+```

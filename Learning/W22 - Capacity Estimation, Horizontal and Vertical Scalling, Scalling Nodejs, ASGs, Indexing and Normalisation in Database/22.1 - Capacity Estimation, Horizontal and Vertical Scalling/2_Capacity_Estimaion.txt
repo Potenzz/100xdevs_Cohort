@@ -1,0 +1,29 @@
+
+
+-------------------- Capacity Esitmation --------------------------
+
+This is common system design interview question, where theyll ask you:
+
+1. How would you scale your server. 
+2. How do you hanlde spikes. 
+3. How can you support a certain SLA(Service Level Agreement) given some traffic. 
+
+
+Answer usually require a bunch of 
+1. Paper math
+2. Esitmation requests/s 
+3. Assuming/Monitoring how many requests a single machine can hanlde
+4. Autoscalling machines based on the load that is estimated time to time. 
+
+
+
+-------------------
+SLA (Service Level Agreement) is a contract between a service provider and a customer that defines the 
+level of service expected. It typically includes:
+
+-Uptime guarantee (e.g., 99.9% availability)
+-Response time for issues and support requests
+-Performance benchmarks
+-Penalties or compensations if the provider fails to meet the agreed terms
+
+SLAs are common in cloud computing, hosting services, and IT support contracts. 

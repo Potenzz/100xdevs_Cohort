@@ -1,0 +1,133 @@
+
+---------------------- Indexing in Postgres ----------------------------
+
+We've created Postgres tables many times, lets see how/if Indexing helps up speed up queries.
+
+- Create PG DB locally
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=mysecretpassword -d postgres
+
+- Connect to it and put some dummy data in it. 
+docker exec -it container_id /bin/bash
+psql -U postgres
+
+- Create the schema for a simple medium like app
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY, 
+    email VARCHAR(255) UNIQUE NOT NULL, 
+    password VARCHAR(255) NOT NULL, 
+    name VARCHAR(255)
+);
+
+CREATE TABLE posts (
+    post_id SERIAL PRIMARY KEY, 
+    user_id INTEGER NOT NULL, 
+    title VARCHAR(255) NOT NULL, 
+    description TEXT, 
+    image VARCHAR(255), 
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+
+- add dummy data 
+```
+DO $$ 
+DECLARE 
+    returned_user_id INT;
+BEGIN
+    -- Insert 5 users
+    FOR i IN 1..5 LOOP
+        INSERT INTO users (email, password, name) VALUES
+        ('user'||i||'@example.com', 'pass'||i, 'User '||i)
+        RETURNING user_id INTO returned_user_id;
+
+        FOR j IN 1..50000 LOOP
+            INSERT INTO posts(user_id, title, description)
+            VALUES (returned_user_id, 'Title '||j, 'Description for post '||j);
+        END LOOP;
+    END LOOP;
+END $$;
+```
+
+---  Now, try running the query and see how lond does it take to get the data. 
+EXPLAIN ANALYSE SELECT * FROM posts WHERE user_id=2 LIMIT 100
+
+see, the execution time it took. 
+
+
+
+--------- Now, add an index to user_id ----------------
+```
+CREATE INDEX idx_user_id ON posts(user_id);
+```
+
+Notice the execution time now, 
+What makes it so fast?? 
+
+
+
+----------------------- How Indexing Works ------------------------------
+
+When you create an index on a field, a new data structure (usually B-tree) is created that stores the mapping from 
+the index column to the location of the record in the original table. 
+
+Search on the index is usually log(n).
+
+
+
+-- 
+
+
+The data pointer (in case of postgres) is the page and offset at which this record can be found. 
+Think of the index as the appendix of a book and the location as the page + offset of where this data 
+can be found. 
+
+
+- 
+By indexing the read becomes fast, but it makes the writes little slower, as it needs to write in index 
+data structure (Btree) as well. 
+
+
+
+
+
+---------------------------- Complex Indexes -----------------------------------
+
+You can have index on more than one column for more Complex queries. 
+
+For example, 
+
+Give me all the posts of user with given id with title "Class 1". 
+
+THe index needs to have two keys now. 
+```
+CREATE INDEX idx_posts_user_id_title ON posts(description, title);
+```
+
+try searching before the index is added and after it is added. 
+```
+EXPLAIN ANALYSE SELECT * FROM posts WHERE title='title' AND description='my title';
+```
+
+
+
+------------------- Prisma schema -------------------------
+```
+model User {
+  user_id   Int    @id @default(autoincrement()) 
+  email     String @unique
+  password  String
+  name      String?
+  posts     Post[] // One-to-Many relation with posts
+}
+
+model Post {
+  post_id     Int     @id @default(autoincrement()) 
+  user        User    @relation(fields: [user_id], references: [user_id])
+  user_id     Int
+  title       String
+  description String?
+  image       String?
+
+  @@index([user_id]) // Index for faster lookup by user_id
+}
+```

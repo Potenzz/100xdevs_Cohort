@@ -1,0 +1,402 @@
+
+------------------- Here, I'll be sharing steps, i did -------------------------
+
+
+
+1. --------- Create an EC2 Instance at AWS ---------------------------
+
+---  Simply create normal ec2, with Security group. 
+ 
+--- then in git terminal, 
+here, keypair_filename = nodeapp.pem
+
+in security group, add inbound rule for port 3000, as our app will run at that port
+
+```
+$ chmod 400 nodeapp.pem
+
+$ ssh -i nodeapp.pem ubuntu@18.117.182.216
+```
+
+
+
+--- Install node js here: 
+```
+$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+
+
+$ export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+
+$ nvm install node
+```
+
+--- clone your app, and test it.
+```
+$ git clone https://github.com/100xdevs-cohort-2/week-22.git
+
+$ cd week-22/
+
+$ npm install 
+
+$ npm run start
+```
+
+
+
+2. -------- Create AMI (Amazon machine image) of created instance ---------------------
+
+By gui, select the instance, then on Actions/Create image and template/Create imagee. 
+Give name, storage(keep it default 8gb) and create simply. 
+
+
+
+3. -------------------- Create Security Groupt for ASGs -----------------------------
+-- Create Security Groups, add port 22 and 3000. and give it name, (name will be used later for connecting.)
+
+
+4. ---------------------- Create Launch Template --------------------
+By gui, create Launch template. 
+
+-Give it name, 
+-In image section, Attach your above created AMI
+-In Instance type, keep it default, will give type on ASGs step.
+-In keypair, attach your above created keypair
+-In Security Group, attatch the above created security group.
+-Storage is fine, 8gb default.
+ 
+
+- add userdata in advance option. the tricky one. It starts the app on template let say. 
+
+--------- The Worked one: (But run the Application as root user, not recommended for security reasons.)
+```
+#!/bin/bash
+
+# Load NVM environment
+export NVM_DIR="/home/ubuntu/.nvm"
+source $NVM_DIR/nvm.sh
+source /home/ubuntu/.bashrc
+source /home/ubuntu/.profile
+
+nvm use 23  
+
+# Set PATH properly
+export PATH=$NVM_DIR/versions/node/v23.11.0/bin:$PATH
+
+# Debugging: Check if npm are available
+which node
+which npm
+
+# Install PM2 globally (if not installed)
+npm install -g pm2
+
+# Now, set PM2_HOME after installing PM2
+export HOME=/home/ubuntu
+export PM2_HOME=/home/ubuntu/.pm2
+
+
+# Navigate to app directory and start the app
+cd /home/ubuntu/week-22
+pm2 start index.js --name "my-app"
+
+# Save the PM2 process list
+pm2 save
+
+# Set up PM2 to restart on boot **after saving the process**
+pm2 startup systemd -u ubuntu --hp /home/ubuntu
+sudo systemctl daemon-reload
+sudo systemctl enable pm2-ubuntu
+sudo systemctl restart pm2-ubuntu
+
+# Log success
+echo "Application started successfully with PM2"
+
+# Redirect all output to a log file
+exec > /home/ubuntu/userdata.log 2>&1
+```
+
+--------- Second one(Run Application with ubuntu user.)(The recommended one.): 
+```
+#!/bin/bash
+
+# Load NVM environment
+export NVM_DIR="/home/ubuntu/.nvm"
+source $NVM_DIR/nvm.sh
+source /home/ubuntu/.bashrc
+source /home/ubuntu/.profile
+
+nvm use 23  
+
+# Set PATH properly
+export PATH=$NVM_DIR/versions/node/v23.11.0/bin:$PATH
+
+# Debugging: Verify node and npm are available
+which node
+which npm
+
+# Ensure Node.js is globally available
+sudo ln -sf $(which node) /usr/bin/node
+sudo ln -sf $(which npm) /usr/bin/npm
+
+
+# Install PM2 globally (if not installed)
+npm install -g pm2
+
+
+# Now, set PM2_HOME after installing PM2
+export HOME=/home/ubuntu
+export PM2_HOME=/home/ubuntu/.pm2
+
+# Ensure PM2 directory permissions are correct
+mkdir -p $PM2_HOME
+chown -R ubuntu:ubuntu $PM2_HOME
+
+PM2_PATH=$(which pm2)
+
+# Run everything as ubuntu user
+sudo -u ubuntu $PM2_PATH start /home/ubuntu/week-22/index.js --name "my-app"
+sudo -u ubuntu $PM2_PATH save
+sudo -u ubuntu $PM2_PATH startup systemd -u ubuntu --hp /home/ubuntu
+
+# Set up PM2 to restart on boot **after saving the process**
+sudo systemctl daemon-reload
+sudo systemctl enable pm2-ubuntu
+sudo systemctl restart pm2-ubuntu
+
+# Log success
+echo "Application started successfully with PM2"
+
+# Redirect all output to a log file
+exec > /home/ubuntu/userdata.log 2>&1
+```
+
+
+------------ To check whether this userdata is working or not, give below cmd:
+```
+/var/log/cloud-init.log
+
+/var/log/cloud-init-output.log
+
+cat /var/log/cloud-init-output.log
+```
+
+
+------------ To check if app is running or not : 
+1. normal way
+```
+pm2 list
+``` 
+
+2. if permission issue: 
+```
+sudo chown ubuntu:ubuntu /home/ubuntu/.pm2/rpc.sock /home/ubuntu/.pm2/pub.sock
+
+pm2 list
+```
+
+
+------------------------
+
+
+The first one given, which didnt' work.
+```
+#!/bin/bash 
+export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v23.11.1/bin
+echo "hi there before"
+echo "hi there after"
+npm install -g pm2
+cd /home/ubuntu/week-22
+pm2 start index.js 
+pm2 save
+pm2 startup
+```
+
+
+
+
+Kirat's way, Below is for reference, here, pm2 was already installed in image, unlike ours, and had diffrent app
+as well named stream-drm somethingvv. not to copy, just for reference.
+```
+#!/bin/bash
+export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v18.17.0/bin
+PM2=/home/ubuntu/.nvm/versions/node/v18.17.0/lib/node_modules/pm2/bin/pm2
+export PM2_HOME="/home/ubuntu/.pm2"
+su - ubuntu -c "cd /home/ubuntu/stream-modules/modules/stream-drm; PATH=$PATH; PM2_HOME=$PM2_HOME $PM2 start npm -- start -u ubuntu"
+```
+
+-----------------------
+
+Now, simply create "Launch Template"
+
+
+
+5. ----------------------- Now, Create Auto Scalling Groups -----------------------------
+
+
+- Give its name, 
+- attach the launch instance, its version. (it must be 1, as of now.)
+next
+
+- In Instance type requirements, manually add instance types. select t2.micro (the free one, as of now)
+- Keep Instance Distribution to 100% on-demand, no on-spot.
+- In network tab, add availablity zones, keep it atleast 2. 
+next
+
+--- Load Balancers
+- "Attach to a new load-balancer" option for our usecase. 
+- select, Applications Load Balancers(https,http)
+- on load balancer scheme, select, internet-facing
+- In listeners and routing, 
+    keep port 80(its the port of load balancer.) 
+    Create a target group, give name to it.
+next
+
+
+- In Group Size > Desired Capacity , give it 1 machine as of now. 
+- In Scalling > Give Min and Max machine to be needed, keep both of them 1 as of now. 
+- In Scalling > Automatice scalling, keep it No scalling policy, as of now. 
+- In Instance Maintenance policy, keep it no policy. as of now. 
+next 
+
+- no notification 
+next 
+
+- no tags 
+next 
+
+
+- Now, simply Create Auto scalling group.
+
+
+
+-------------------- Let see, if Load Balancers works -----------------------
+
+The DNS name : nodeapp-asg-1-1232172360.us-east-2.elb.amazonaws.com 
+This is url of load balancer. (will be used later)
+
+
+If you hit this url, it will redirect to the EC2 Servers, 
+
+1. But, before that you need to add port 443 and 80 to security inbound rules. 
+
+
+2. change port of target group from 80 to 3000 as app will be running there. for this : 
+
+-- Create new target group, select - instance, 
+- give name, change port from 80 to 3000. 
+- select no instance, as asg will handle it.
+- simpley create.
+
+-- now update it to asg, 
+in load balancer option, update with new target group.
+
+-- now update it to load balancer as well. 
+select rule > manage rules > edit rules > update with new target group.
+
+
+
+------------------ Now, to connect your domain name to load balancer -----------------
+
+Load Balancers > listeners and rules > Add listeners 
+
+-Select Protocol to HTTPS and its Port 443.
+
+-Forward to created target group. 
+
+--- Add SSL Certificate, either by certbot or create new with AWS by "Request new ACM Certificate"
+
+- Request Certificate > Give your domain name > DNS validation > Create
+- It will give CNAME name and CNAME value. 
+
+Now, add these value to your dns provider.
+- keep the type as CNAME
+- the name will be CNAME name.
+- the domain name will be CNAME value.
+
+Then Certificate will be issued. 
+
+- select Certificate and "Add"
+
+
+
+------ Now, also create one more entry at your dns provider. 
+
+- keep the type as CNAME. 
+- the name will be your actual website domain name you want
+- the domain value will be the DNS of load balancer we got earlier. 
+i.e The DNS name : nodeapp-asg-1-1232172360.us-east-2.elb.amazonaws.com 
+
+
+
+-------------------------- Now, Actually Using Auto Scalling -----------------------
+
+1. Keep the desired Capacity, min max Capacity. 
+
+2. In automatic scalling > Dynamic scalling policy > Create a new policy (easy policy, like cpu usage).
+    - Keep metric type, Average CPU utilization to be 50%.
+
+
+
+------------------ Managing Metric by own ----------------------
+If, there is some other metric you want ASGs to work accordingly then you can do it by this such code:
+
+```
+import { AutoScalingClient, CreateAutoScalingGroupCommand, PutScalingPolicyCommand } from "@aws-sdk/client-auto-scaling";
+
+const client = new AutoScalingClient({ region: "us-east-1" }); // Change region as needed
+
+const autoScalingGroupName = "my-auto-scaling-group";
+
+// Step 1: Create Auto Scaling Group
+async function createAutoScalingGroup() {
+    const params = {
+        AutoScalingGroupName: autoScalingGroupName,
+        LaunchTemplate: { LaunchTemplateName: "my-launch-template" }, // Change as needed
+        MinSize: 1,
+        MaxSize: 5,
+        DesiredCapacity: 2,
+        VPCZoneIdentifier: "subnet-12345678,subnet-87654321", // Change to your subnets
+        Tags: [{ Key: "Name", Value: "MyAutoScalingInstance", PropagateAtLaunch: true }]
+    };
+
+    try {
+        const response = await client.send(new CreateAutoScalingGroupCommand(params));
+        console.log("✅ Auto Scaling Group Created:", response);
+    } catch (error) {
+        console.error("❌ Error creating ASG:", error);
+    }
+}
+
+// Step 2: Attach CPU-Based Scaling Policy
+async function attachScalingPolicy() {
+    const params = {
+        AutoScalingGroupName: autoScalingGroupName,
+        PolicyName: "cpu-scaling-policy",
+        PolicyType: "TargetTrackingScaling",
+        TargetTrackingConfiguration: {
+            PredefinedMetricSpecification: {
+                PredefinedMetricType: "ASGAverageCPUUtilization"
+            },
+            TargetValue: 50.0
+        }
+    };
+
+    try {
+        const response = await client.send(new PutScalingPolicyCommand(params));
+        console.log("✅ Scaling Policy Attached:", response);
+    } catch (error) {
+        console.error("❌ Error attaching scaling policy:", error);
+    }
+}
+
+// Execute the functions
+(async () => {
+    await createAutoScalingGroup();
+    await attachScalingPolicy();
+})();
+
+```
+
+For accesskeys of aws, better to create new user with limited accesss, rather then giving full access. 

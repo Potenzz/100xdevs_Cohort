@@ -1,0 +1,58 @@
+
+
+------------------- Key Difference -----------------------
+
+Vertical Scaling (Scaling Up/Down): Increase server power (CPU, RAM, storage). Limited growth, 
+potential downtime.
+
+Horizontal Scaling (Scaling Out/In): Add more servers, load balancing, better scalability, and fault 
+tolerance.
+
+------------------------- Horizontal Scaling ----------------------------
+
+Horizontal scalling represents increasing number of instances you have based on metric to be able to support more 
+load. 
+AWS has the concept of Auto Scaling Groups, which as the name suggests lets you autoscale the number of machines 
+based on certain metrics. 
+
+
+Buzz words: 
+
+--- Images (AMI: Amazon Machine Images) : Snapshots of machine from which you can create more machine. 
+A snapshot of an EC2 instance, including the OS, installed software, configurations, and data.
+Its Use case:
+Used to create new EC2 instances with the same configuration.
+Helps in backups, disaster recovery, and scaling identical instances.
+
+--- Load Balancers : An entrypoint that your users send requests to that forwards it to one of many machines (or 
+more specifically, to a target group). Its a fully managed service which means you don't have to worry about 
+scalling it ever. AWS takes care of making it highly available. 
+
+--- Target Groups : A group of EC2 instances that a load balancer can send a requests to 
+
+--- Launch Template : A Template that can be used to start new machine
+What it is: A blueprint that defines how an EC2 instance should be launched. It includes the AMI ID, instance type, 
+key pair, security groups, storage, user data, etc.
+Its Use case:
+Used for launching EC2 instances with predefined configurations.
+Helps in automating deployments, especially in Auto Scaling Groups.. 
+
+
+
+------------------------------ Implementing ASGs --------------------------------------
+
+There are two ways you can use ASGs. 
+
+- Create a EC2 instance. 
+    1. Install nodejs on it : https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04
+
+    2. Clone the repo : https://github.com/100xdevs-cohort-2/week-22 
+
+- Create an AMI with your machine 
+- Create Security group
+- Launch Template: 
+    - Ref for User Data : https://stackoverflow.com/questions/15904095/how-to-check-whether-my-user-data-passing-to-ec2-instance-is-working
+    ```
+
+
+Now, move forward to 2nd Notes.txt

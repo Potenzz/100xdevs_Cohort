@@ -38,6 +38,8 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
    - Deploying backends at AWS - EC2.
    - Docker for containerization  
    - Applying CI/CD Pipeline via github, dockerhub, to an AWS EC2 for smooth integration and deployment.
+   - Vertical and Horizontal Scalling with AWS-ASGs (Auto Scalling Groups), Load Balancers, Capacity Estimation.
+
 
 5. **Programming Languages**  
    - JavaScript/TypeScript  

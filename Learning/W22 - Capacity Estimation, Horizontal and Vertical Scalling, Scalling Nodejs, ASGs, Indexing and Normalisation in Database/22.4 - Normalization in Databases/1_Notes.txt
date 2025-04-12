@@ -1,0 +1,194 @@
+Normalization 
+Full Proof Data schema
+
+
+----------------------------------------- Normalization --------------------------------------
+
+Normalization is the process of removing redundancy in your database. 
+
+
+Redundancy : 
+Redundant data means data that already exists elsewhere and we're duplicating it in two places. 
+For example, if you have two tables. 
+
+1. users 
+2. orders
+
+where you do following: 
+
+users: userid | username | password | name
+orders : orderid | userid | name | amount. 
+
+
+In these tables, you put name twice, you might think that when reading the orders data, it will be easy to get 
+amount and name at one place. 
+But that is the Redundant data. 
+But, if name is changed in users table, then orders table may have inconsistency in data. 
+
+
+However, this schema is still "full proof". We can get all the orders given in userid. 
+
+---------- Non Full Proof Data -----------------------
+
+users: userid | username | password | name
+orders : orderid | name | amount. 
+
+This schema doesnt have any relationship b/w orders and users. This is just plain wrong. you can never tell the 
+orders for a user (esp if 2 user have same name). 
+
+Normalization is done on table that are full proof to remove redundancy. 
+
+
+---------------------- Types of relationship --------------- 
+use case: Library management system 
+1. Users table
+2. Library Card table
+3. Books table
+4. Genre table
+
+
+-- One to One : each user has a single Library card 
+-- One to many : each user has multiple books entry in books card. 
+-- Many to one : 
+-- Many to Many : 
+
+
+----------------------- Normalizing Data ------------------------------
+
+Normalization in Database is a systematic approach of decomposing tables to eliminate data redundancy and 
+improve data integrity. 
+
+The process typically progresses through several normal forms, each building on the last. 
+When you look at a schema, you can identify if it lies in one of the following categories of normalization. 
+
+- 1NF 
+- 2NF 
+- 3NF 
+- BCNF
+- 4NF 
+- 5NF 
+
+
+you aim to reach 3NF/BCNF usually. The lower you go, the more normalised your table is. But over normalization
+can lead to excessive joins. 
+
+
+--------------------------------------- 1NF ------------------------------------------------
+
+- A single cell must not hold more than one value(atomicity)
+This rule ensures that each column of a database table holds only atomic (indivisible) values, and multi-valued 
+attributes are split into separate columns. For example, if a column is meant to store phone numbers, and a 
+person has multiple phone numbers, each number should be in a separate row, not as a list or set in a single cell. 
+
+
+wrong way:
+studenid | Name | Activities 
+1 | John | Basketball, Tennis
+
+right way: 
+studenid | Name | Activity
+1 | John | Basketball
+1 | John | Tennis
+
+
+- There must be a primary key for identification : Each table should have a primary key, which is a column 
+(or a set of columns ) that uniquely identifies each row in a table. 
+
+- No duplicate rows: To ensure that the data in the table is organised properly and to uphold the integrity
+of the data, each row in the table should be unique. This rule work hand-in-hand with the presence of a primary key 
+to prevent duplicate entries which can lead to data anoamlies. 
+
+- Each column must have only one value for each row in the table : This rule emphasizes that every column must hold
+only one value per row, and that value should be of the same kind for that column across all rows. 
+
+wrong way: 
+Customerid | name | contactinfo
+1 | alice | alice@mail.com, 555-888-999
+
+right way: broker in columns, unlike point1, where we broke in rows.
+Customerid | name | email | phone
+1 | alice | alice@mail.com | 555-888-999
+
+
+---------------------------------------------- 2NF -------------------------------------------------------
+
+1NF gets rid of repeating rows. 2NF gets rid of redundancy. 
+
+A table is said to be in 2NF if it meets the following criteria: 
+- is already in 1NF 
+- Has 0 partial dependency. 
+
+    Partial dependency: 
+    A partial dependency occurs when a non-prime attribute (i.e., an attribute that is not part of any candidate key) is functionally "dependent on part of a composite primary key" and not on the whole key.
+    This means the attribute depends only on a portion of the primary key, rather than the entire primary key. This can cause redundancy and anomalies in the database.
+
+- To eliminate partial dependency and achieve 2NF, the table should be decomposed in such a way that all non-prime attributes depend on the entire primary key.
+
+
+---
+
+
+----------- example: 
+
+
+Wrong way: 
+StudentId | CourserId | CourseName | InstructorName | Grade 
+1 | cs | computerscience | smith | A
+
+here, studenid and courseid both create composite key., ,and courseName and instructorName are partially depends on
+it. 
+
+right way(two tables. ): 
+Courses table: 
+courseid | courseName | instructorName 
+
+Result table: 
+studenid | CourseID | Grade 
+
+
+------------ 
+
+a new table.
+
+Courses : 
+courseid | courseName | instructorId | instructorName | age | YoE
+
+
+here, you'll see the age and yoe depends on instructorName.. but its still 2NF as there is no composite key.
+
+So, we need to see the 3NF 
+
+
+----------------------------------------------- 3NF ------------------------------------------------------
+
+When a table is in 2NF, it eliminates repeating groups and redundancy. but it does not eliminate transitive
+partial dependency. 
+
+So, for a table to be in 3NF, it must: 
+- be in 2NF. 
+- have no transitive partial dependency. 
+
+A transitive dependency in a relational database occurs when one non-key attribute indireclty depends on the 
+primary key through another non-key attribute. 
+means, if example, instructorName depends on instructorId which depends on primary key (CourseID)
+
+
+wrong way: 
+Courses : 
+courseid | courseName | instructorId | instructorName | age | YoE
+
+
+right way: 
+
+Courses : 
+courseid | courseName | instructorId 
+
+Instructor : 
+instructorId | instructorName | age | YoE
+
+
+
+-------------
+
+
+3NF is ideally prefers a schema have, more than that it just increase the joins in sql query.

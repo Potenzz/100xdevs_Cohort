@@ -27,7 +27,8 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
 3. **Database Management**  
    - NoSQL Databases (MongoDB)  
    - SQL Databases (PostgreSQL) with Prisma ORM 
-   - Transactions and optimization techniques  
+   - Transactions and Optimization Techniques  
+   - Indexing and Normalization in Databases.
    - Deployment optimizations with Prisma Accelerate and Connection Pooling.
 
 

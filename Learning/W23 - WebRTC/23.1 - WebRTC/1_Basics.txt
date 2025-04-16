@@ -1,0 +1,220 @@
+
+
+
+--------------------------------- WebRTC ------------------------------------------
+
+WebRTC is core/only protocol that lets you do realtime communication from inside a browser. 
+
+
+You can use WebRTC for applications that require sub second latency. 
+
+example: 
+- zoom, meet (multi party call)
+- omegle (1 to 1)
+- 30fps games (WebRTC can also send data)
+
+
+------------------- WebRTC Architecture/jargon -----------------------
+
+
+1. ------------ P2P : WebRTC is a peer to peer protocol. this means that you direclty send media over to the other person    
+without the need of a central server.
+
+You do need of central server for signalling and sometime for sending media as well(turn). well see soon. 
+
+
+2. ------------- Signalling server ------------------------------------
+Both the browser need to exchange thier address before they can start talking to each other. 
+A signalling server is used for that. 
+
+It is usually a websocket server but can be anything (http).
+
+
+3. -------------------- STUN (Session Traversal Utilities for NAT) --------------- 
+It gives you back your publically accessable IPs. It shows you how the world sees you.
+
+ref : https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
+check yourself here. 
+
+
+4. -------------------- ICE Candidates -----------------------------
+
+ICE (Interactive Connectivity Establishment) candidates are potential networking endpoints that WebRTC uses to 
+establish a connection between peers. Each candidates represents a possible method for two devices(peers) to 
+communicate, usually in the context of realtime applications like videocallls. 
+
+
+If two friends are trying to connect to each other in a hotelwifi, they can connect via their private router ice
+candidates.
+
+if two people from different countries are trying to connect to each other, then they would connect via their 
+pubic IPs. 
+
+
+5. ------------------- TURN server --------------------------------------------
+
+A lot of times, your network doesnt allow media to come in from browser2. This depends on how restrictive you 
+network is. 
+
+Since the ice candidates is discovered by the stun server, your network might block incoming data from browser2 and
+only allow it from the stun server. 
+
+
+6. ----------------Offer ---------------
+
+The process of the first browser (the one initiating the connection) sending their ice candidates to the other side
+
+7. --------------- Answer --------------
+
+The other side returing their ice candidates is called Answer. 
+
+
+Note: if both parties are sending data, then you might need to create two webrtc connection, each offering and 
+each answering then.
+
+8. ------------------------------------- SDP : Session Description Protocol -------------------------------------
+
+A single file that contains all your
+
+1. ice candidates
+2. what media you want to send, what protocols you've used to encode the media. 
+
+This is the first file that is sent in offer and received in answer.
+
+
+example file: 
+```
+v=0
+o=- 46117324 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0
+a=msid-semantic: WMS
+
+m=audio 9 UDP/TLS/RTP/SAVPF 111
+c=IN IP4 0.0.0.0
+a=mid:0
+a=sendrecv
+a=rtpmap:111 opus/48000/2
+a=ice-ufrag:abcd1234
+a=ice-pwd:efgh5678ijkl
+a=candidate:842163049 1 udp 1677729535 192.168.1.2 53705 typ srflx raddr 0.0.0.0 rport 0
+a=fingerprint:sha-256 6A:B3:C9:...
+a=setup:actpass
+a=ssrc:123456789 cname:user1
+```
+
+
+
+9. -------------------------- RTCPeerConnection (pc, peer connection) ------------------------------------------
+
+This is a class that the browser provides you with which gives you access to the sdp, lets you create 
+answer/offers, lets you send media. 
+
+This class hides all the complexity of webrtc from the developer. 
+
+
+
+10 ------------ Summary ------------------
+
+You need a signalling server, stun server to initiate webrtc connection between parties. 
+you can kill the these once the connection is made.
+
+
+You need to include a turn server incase any of the users are on a restrictive network so you can get back 
+a turn ice candidates as well. 
+
+
+
+
+useful link: chrome://webrtc-internals/  
+it display all connected webrtc connection on your browser.
+
+
+
+
+
+------------------------ Connecting the two sides --------------------------------------
+
+The steps to create a webrtc connection between 2 sides includes - 
+
+- Browser 1 creates an RTCPeerConnection
+- Browser 1 creates an offer
+- Browser 1 sets the local Description to the offer 
+- Browser 1 sends this offer to other side through signalling server 
+- Browser 2 receives the offer from signalling server 
+- Browser 2 sets the remote Description to the offer 
+- Browser 2 creates an answer 
+- Browser 2 sets the local Description to the answer
+- Browser 2 sends this answer to other side through signalling server 
+- Browser 1 receives the answer and sets the remote description.
+
+This is just to establish the p2p connection b/w the two parties. 
+
+
+To actually send the data, we have to : 
+
+1. Ask for camera/mic permissions. 
+2. Get the audio and video streams. 
+3. Call addTrack on the pc
+4. This would trigger a onTrack callback on the other side. 
+
+
+-------------------------------------- Other Architecture ------------------------------------
+
+There are two popular Architecture for doing webRTC. 
+
+1. SFU – Selective Forwarding Unit
+2. MCU – Multipoint Control Unit
+
+- Problem with p2p - 
+Doesn't scale beyond 3-4 people in the same call. 
+
+
+
+--------- SFU - Selective Forwarding Unit -----------------
+
+This acts as a central media server which forwards packets b/w users. 
+
+Can perform mulitple features, 
+- like converting video quality, 
+- add pagination for videos if many users there, 
+- allow more flexiblity.
+
+Popular Open Source SFUs - 
+
+1. https://github.com/versatica/mediasoup  
+2. https://github.com/pion/webrtc 
+
+
+
+--------------------------------  MCU - Multipoint Control Unit -----------------------------------------
+
+It mixes audio/video together on the server before Forwarding it. 
+
+This means it need to - 
+1. decode video/audio (using something like ffmpeg)
+2. Mix them (create a vieo canvas/ create a single audio stream)
+3. send out the merged audio stream to everyone.
+
+incase of many voices, it takes let say loudest 3 voices, and then merge them.
+
+
+
+
+
+-------------------------------- Implementaion -----------------------------------
+
+We well be writing the code in 
+
+1. Node.js for the signalling server. It will be a websocket server that supports 3 types of messages
+ - createOffer
+ - createAnswer
+ - addIceCandidate
+
+2. React + PeerConnectionObject on the frontend.
+
+
+We're actually building a slighly complex version of https://jsfiddle.net/rainzhao/3L9sfsvf
+
+

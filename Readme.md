@@ -23,6 +23,7 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
    - Redis, Queues, Pub Subs
    - OpenAPI Specs with hono and TSOA
    - DDOS, RateLimiting
+   - webRTC (SFU)
 
 3. **Database Management**  
    - NoSQL Databases (MongoDB)  
@@ -34,7 +35,7 @@ Welcome to my GitHub repository! This space is dedicated to showcasing the skill
 
 4. **DevOps and Deployment**  
    - Vercel for frontend deployment 
-   - AWS - S3 - CloudFront for frontend Depoyment.
+   - AWS - S3 - CDNs for frontend Depoyment.
    - Serverless Backends, i.e Cloudflare workers for Backends.
    - Deploying backends at AWS - EC2.
    - Docker for containerization  

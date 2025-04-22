@@ -1,0 +1,26 @@
+{
+  "name": "5-express-vitest-prisma",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "vitest": "^3.1.2",
+    "vitest-mock-extended": "^3.1.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "@types/supertest": "^6.0.3",
+    "express": "^5.1.0",
+    "prisma": "^6.6.0",
+    "supertest": "^7.1.0",
+    "zod": "^3.24.3"
+  }
+}

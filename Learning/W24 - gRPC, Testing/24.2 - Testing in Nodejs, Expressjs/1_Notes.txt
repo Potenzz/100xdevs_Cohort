@@ -1,0 +1,221 @@
+
+-------------------------- Testing in Nodejs And Express ------------------------------
+
+One of the core thing while writing code is testing it. 
+
+
+Goal would be to understand: 
+
+1. How to test an exress backend
+2. Mocking, Spying, Jest, Vitest
+3. Unit Tests vs Integration Tests vs End to End tests
+4. How to integrate testing and coverage in CI/CD. 
+
+
+------------------------------------------------- 1-simple-app ---------------------------------------------------
+
+```
+npm init -y
+npx tsc --init
+```
+
+```
+npm install --save-dev ts-jest @jest/globals
+
+npx ts-jest config:init
+```
+
+- update package.json:
+```
+"scripts":{
+    "test":"jest"
+}
+
+- Add tests (index.test.ts)
+```
+import { describe, expect, test} from "@jest/globals";
+import {sum} from "../index";
+
+describe('sum module', ()=>{
+    test('adds 1+2 to equal 3', ()=>{
+        expect(sum(1,2)).toBe(3);
+    })
+})
+```
+
+- npm run test
+
+
+
+
+
+------------------------------------------- 2-express-app -----------------------------------------------------------
+
+- initialize app
+
+```
+npm install --save-dev ts-jest @jest/globals @types/express
+npm install express
+npm install supertest @types/supertest
+
+npx ts-jest config:init
+```
+
+
+- src/index.ts 
+```
+import express from "express";
+
+export const app = express();
+
+app.use(express.json());
+
+app.post("/sum", (req, res)=>{
+    const a = req.body.a;
+    const b = req.body.b;
+    const answer = a+b;
+    res.json({
+        answer
+    });
+})
+```
+
+
+
+but, you'll notice it is not running on any port. (for the tests.)
+
+hence, use src/bin.ts: 
+```
+import { app } from "./index";
+
+app.listen(3000, ()=>{
+    console.log("app is ruuing on port 3000")
+})
+```
+
+
+
+-- src/tests/index.test.ts:
+```
+import {describe, expect, test, it} from '@jest/globals';
+import request from "supertest";
+import { app } from "../index"
+
+describe("POST /sum", () => {
+    it("should return the sum of two numbers", async () => {
+        const res = await request(app).post("/sum").send({
+          a: 1,
+          b: 2
+        });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.answer).toBe(3);
+      });
+});
+```
+
+
+--------------------------------------- 3-expres-with-zod ----------------------------------------------------
+
+```
+npm install --save-dev ts-jest @jest/globals @types/express @types/supertest
+npm install express supertest zod
+
+npx ts-jest config:init
+```
+
+-src/index.ts:
+```
+import express from "express";
+import { z } from "zod";
+
+export const app = express();
+app.use(express.json());
+
+const sumInput = z.object({
+    a: z.number(),
+    b: z.number()
+})
+
+app.post("/sum", (req, res) => {
+    const parsedResponse = sumInput.safeParse(req.body)
+    
+    if (!parsedResponse.success) {
+        return res.status(411).json({
+            message: "Incorrect inputs"
+        })
+    }
+
+    const answer = parsedResponse.data.a + parsedResponse.data.b;
+
+    res.json({
+        answer
+    })
+});
+
+app.get("/sum", (req, res) => {
+    const parsedResponse = sumInput.safeParse({
+        a: Number(req.headers["a"]),
+        b: Number(req.headers["b"])
+    })
+    
+    if (!parsedResponse.success) {
+        return res.status(411).json({
+            message: "Incorrect inputs"
+        })
+    }
+
+    const answer = parsedResponse.data.a + parsedResponse.data.b;
+
+    res.json({
+        answer
+    })
+});
+```
+
+
+-src/tests/index.test.ts:
+```
+import {describe, expect, test, it} from '@jest/globals';
+import request from "supertest";
+import { app } from "../index"
+
+describe("POST /sum", () => {
+  it("should return the sum of two numbers", async () => {
+      const res = await request(app).post("/sum").send({
+        a: 1,
+        b: 2
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.answer).toBe(3);
+    });
+
+    it("should return 411 if no inputs are provided", async () => {
+      const res = await request(app).post("/sum").send({});
+      expect(res.statusCode).toBe(411);
+      expect(res.body.message).toBe("Incorrect inputs");
+    });
+
+});
+
+
+describe("GET /sum", () => {
+  it("should return the sum of two numbers", async () => {
+      const res = await request(app)
+        .get("/sum")
+        .set({
+          a: "1",
+          b: "2"
+        })
+        .send();
+      expect(res.statusCode).toBe(200);
+      expect(res.body.answer).toBe(3);
+  });
+
+  it("should return 411 if no inputs are provided", async () => {
+    const res = await request(app)
+      .get("/sum").send();
+    expect(res.statusCode).toBe(411);
+  });
+
+});
+```

@@ -1,0 +1,182 @@
+----------------------- Moving from Jest to Vitest ----------------------------
+https://vitest.dev/ is a mildly recent entrant in the testing framework market. 
+It has bunch of benifits over jest, specially has great support for ts.
+
+So we'll be moving to vitest for all future tests. 
+It is highly compatable with jest. 
+
+Link to why vitest : https://vitest.dev/guide/why.html
+
+
+
+
+---------------------------------------- 4-express-with-vitest ---------------------------------------------------
+```
+npm install --save-dev @types/express @types/supertest
+npm install express zod supertest
+npm install -D vitest
+```
+
+- test/index.test.ts: 
+just import from vitest inplace of @jest/globals:
+```
+import {describe, expect, test, it} from 'vitest';
+```
+
+- in package.json:
+```
+"scripts":{
+    "test":"vitest"
+}
+```
+
+--------------------------------------- Adding a Database -------------------------------------------------------
+
+There are two approaches to take when you add external services to your backend.
+You can. 
+1. Mock out the external service call (unit tests)
+2. Start the external services when the tests are running and stop them after the tests end.(integration/endtoend tests)
+
+
+
+------------------------------------ 5-express-vitest-prisma -----------------------------------------------
+
+```
+npm init -y 
+npx tsc --init
+
+
+npm install --save-dev @types/express @types/supertest
+npm install express zod supertest
+npm install -D vitest
+```
+
+
+
+-Add prisma to your codebase
+```
+npm i prisma
+npx prisma init 
+```
+
+- Add basic prisma.schema: 
+```
+model Sum {
+  id Int @id @default(autoincrement())
+  a Int
+  b Int
+  result Int
+}
+```
+
+- generate client
+```
+npx primsa generate
+```
+
+
+
+
+-create src/db.ts :
+```
+import { PrismaClient } from "./generated/prisma";
+
+export const prismaClient = new PrismaClient();
+```
+
+- in src/index.ts:
+```
+import express from "express";
+import { z } from "zod";
+import { prismaClient } from "./db";
+
+export const app = express();
+app.use(express.json());
+
+const sumInput = z.object({
+    a: z.number(),
+    b: z.number()
+})
+
+app.post("/sum", async (req, res:any) => {
+    const parsedResponse = sumInput.safeParse(req.body)
+    
+    if (!parsedResponse.success) {
+        return res.status(411).json({
+            message: "Incorrect inputs"
+        })
+    }
+
+    const answer = parsedResponse.data.a + parsedResponse.data.b;
+
+    await prismaClient.sum.create({
+        data:{
+            a:parsedResponse.data.a,
+            b:parsedResponse.data.b,
+            result:answer
+        }
+    })
+
+    res.json({
+        answer
+    })
+});
+```
+
+
+- but, in src/tests/index.test.ts: The prismaClient from db.ts wont be working, and coming mock in tests.
+```
+import {describe, expect, it, vi} from 'vitest';
+
+vi.mock("../db", ()=>({
+  prismaClient:{sum:{create:vi.fn()}}
+}))
+```
+
+
+
+
+
+---------------------------- Deep Mocking -----------------------------------
+Another way to mock variables is to let vitest figure out the types and mock out all the attribures of the 
+object being mocked. 
+
+for example the prismaClient has lots of attribures. 
+
+console.log(Object.keys(prismaClient))  // run to see its object.
+
+
+
+
+What if we could mock out all these keys in single function call?
+
+
+-------- Deep Mocking ---------
+
+```
+npm i -D vitest-mock-extended
+```
+
+- create __mocks__/db.ts:  keep the __mocks__ folder along with main db.ts file, wherever it exists.
+```
+import { PrismaClient } from "../generated/prisma";
+import {mockDeep} from "vitest-mock-extended";
+
+export const prismaClient = mockDeep<PrismaClient>();
+```
+
+- Remove this mock in index.test.ts: 
+vi.mock("../db", ()=>({
+  prismaClient:{sum:{create:vi.fn()}}
+}))
+
+
+- and add this mock: 
+```
+vi.mock("../db");
+```
+
+
+
+
+

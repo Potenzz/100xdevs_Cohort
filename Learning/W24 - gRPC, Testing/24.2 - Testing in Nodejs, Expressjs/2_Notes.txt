@@ -1,3 +1,9 @@
+using Vitest. 
+Mocking Database.
+Deep Mocking
+Mocking returned value.
+
+
 ----------------------- Moving from Jest to Vitest ----------------------------
 https://vitest.dev/ is a mildly recent entrant in the testing framework market. 
 It has bunch of benifits over jest, specially has great support for ts.
@@ -180,3 +186,58 @@ vi.mock("../db");
 
 
 
+----------------------------------------- Mocking Return Values ---------------------------------------------------
+You can mock the values returned from a mock by using mockResolvedValue.
+
+Update index.test.ts: 
+```
+import {describe, expect, it, vi} from 'vitest';
+import request from "supertest";
+import { app } from "../index"
+import { prismaClient } from '../__mocks__/db';  // updated line
+
+vi.mock("../db");
+
+
+describe("POST /sum", () => {
+  it("should return the sum of two numbers", async () => {
+      
+      prismaClient.sum.create.mockResolvedValue({  ////updated line
+        id: 1, 
+        a:2,
+        b:2,
+        result:3
+      })
+
+      const res = await request(app).post("/sum").send({
+        a: 1,
+        b: 2
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.body.answer).toBe(3);
+    });
+
+    it("should return 411 if no inputs are provided", async () => {
+      const res = await request(app).post("/sum").send({});
+      expect(res.statusCode).toBe(411);
+      expect(res.body.message).toBe("Incorrect inputs");
+    });
+
+});
+```
+
+
+now, whenever in code, if id of created object in Database is asked, this mocked value will be given.
+
+ie.
+```
+const result = await prismaClient.sum.create({
+        data:{
+            a:parsedResponse.data.a,
+            b:parsedResponse.data.b,
+            result:answer
+        }
+    })
+
+const id = result.id   // this value, would be undefined if mocked return value wasn't used.
+```

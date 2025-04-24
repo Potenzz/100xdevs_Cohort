@@ -1,0 +1,33 @@
+name: Run Vitest Tests
+
+on: 
+  workflow_dispatch: 
+  
+  pull_request:
+    branches:
+      - main
+    
+    types: [labeled]
+
+jobs:
+  test:
+    if: ${{ github.event.label.name == 'run-test' }} # Run only if 'run-test' label is added
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: 5-express-vitest-prisma
+        run: npm install && npx prisma generate
+
+      - name: Run Tests
+        working-directory: 5-express-vitest-prisma
+        run: npx vitest run

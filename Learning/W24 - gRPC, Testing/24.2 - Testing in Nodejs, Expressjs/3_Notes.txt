@@ -1,0 +1,160 @@
+Spy vs Mocks 
+Adding a CI/CD Pipeline.
+
+
+
+
+------------------------------------------- Spy vs Mocks ---------------------------------------------------------
+
+While mocks let you mock the functionality of a function call, spies let you spy on function call. 
+
+Till now, we've mocked out the database call. Which means even if i pass in wrong inputs to the prismaClient.user.
+create function, test would still pass. 
+
+
+
+
+Problem: 
+Try flipping a and b inputs. 
+
+in index.ts: 
+```
+const response = await prismaClient.sum.create({
+        data:{
+            a:parsedResponse.data.b,
+            b:parsedResponse.data.a,
+            result:answer
+        }
+    })
+```
+
+
+Try running the tests, they will still work. 
+This means tests are little flaky. They succeded when the code was incorrect. 
+
+
+Solution :
+Lets put a spy on the prismaClient.sum.create function Which ensures that the db call inputs are correct. 
+
+Change the index.test.ts to be: 
+```
+import {describe, expect, it, vi} from 'vitest';
+import request from "supertest";
+import { app } from "../index"
+import { prismaClient } from '../__mocks__/db';
+
+vi.mock("../db");
+
+
+describe("POST /sum", () => {
+  it("should return the sum of two numbers", async () => {
+      
+      prismaClient.sum.create.mockResolvedValue({  
+        id: 1, 
+        a:2,
+        b:2,
+        result:3
+      })
+
+      vi.spyOn(prismaClient.sum, "create"); //updated line
+
+      const res = await request(app).post("/sum").send({
+        a: 1,
+        b: 2
+      });
+
+      expect(prismaClient.sum.create).toHaveBeenCalledWith({   //updated line
+        data:{
+          a:1,
+          b:2,
+          result:3
+        }
+      })
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.answer).toBe(3);
+    });
+
+    it("should return 411 if no inputs are provided", async () => {
+      const res = await request(app).post("/sum").send({});
+      expect(res.statusCode).toBe(411);
+      expect(res.body.message).toBe("Incorrect inputs");
+    });
+
+});
+```
+
+
+
+
+You need to ensure in index.ts about the data field to be correct.: 
+```
+const response = await prismaClient.sum.create({
+        data:{
+            a:parsedResponse.data.a,
+            b:parsedResponse.data.b,
+            result:answer
+        }
+    })
+```
+
+And, here if a and b is flipped, the test would fail now. 
+
+
+
+
+
+-------------------------------------- Adding a CI/CD Pipeline -----------------------------------------------------
+
+- Create a CI/CD Pipeline that runs " npm run test "
+- Create .github/workflows/test.yml
+
+```
+name: Run Vitest Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: 5-express-vitest-prisma
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Tests
+        working-directory: 5-express-vitest-prisma
+        run: npx vitest run
+```
+
+
+
+
+
+
+
+
+---------------------------- Unit Test vs Integration Test vs EndtoEnd Test -----------------------------------------
+
+Unit Test : If you mock out external services(DBs, Kafka, redis), then you're testing just the functionality of the 
+method. These are called unit tests. 
+
+Integration Test: If you don't mock out these services but actually start them locally, then it is considered as 
+as Integration test. 
+
+EntToEnd Test : If you have an full stack app and you actualy open a browser and test things, its called an 
+EndtoEnd test.   i.e cypress and playwright lets you do that.
